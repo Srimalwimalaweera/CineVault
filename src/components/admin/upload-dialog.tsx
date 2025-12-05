@@ -32,7 +32,7 @@ const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters long."),
   description: z.string().min(10, "Description must be at least 10 characters long."),
   videoUrl: z.string().url("Please enter a valid URL."),
-  thumbnailUrl: z.string().url("Please enter a valid thumbnail URL."),
+  thumbnail: z.custom<FileList>().refine((files) => files?.length > 0, 'Thumbnail is required.'),
 });
 
 export function AdminUploadDialog() {
@@ -45,12 +45,16 @@ export function AdminUploadDialog() {
       title: "",
       description: "",
       videoUrl: "",
-      thumbnailUrl: "",
     },
   });
+  
+  const thumbnailRef = form.register("thumbnail");
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Simulating video upload:", values);
+    console.log("Simulating video upload:", {
+        ...values,
+        thumbnail: values.thumbnail[0].name
+    });
     toast({
       title: "Video Submitted",
       description: `"${values.title}" has been added to the database.`,
@@ -123,12 +127,12 @@ export function AdminUploadDialog() {
             />
              <FormField
               control={form.control}
-              name="thumbnailUrl"
-              render={({ field }) => (
+              name="thumbnail"
+              render={() => (
                 <FormItem>
-                  <FormLabel>Thumbnail URL</FormLabel>
+                  <FormLabel>Thumbnail</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://picsum.photos/seed/example/400/600" {...field} />
+                    <Input type="file" accept="image/*" {...thumbnailRef} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
