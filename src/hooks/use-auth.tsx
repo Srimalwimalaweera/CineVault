@@ -1,9 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, ReactNode, useCallback } from 'react';
-import { useUser, useAuth, useFirebase } from '@/firebase/provider';
-import type { User, Auth } from 'firebase/auth';
-import { initiateEmailSignIn, initiateEmailSignUp } from '@/firebase/non-blocking-login';
+import { useUser, useAuth } from '@/firebase/provider';
+import type { User } from 'firebase/auth';
+import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { signOut } from 'firebase/auth';
 import { useToast } from './use-toast';
 
@@ -13,6 +13,7 @@ type AuthContextType = {
   isUserLoading: boolean;
   login: (email: string, password: string) => void;
   signup: (email: string, password: string) => void;
+  signupWithGoogle: () => void;
   logout: () => void;
 };
 
@@ -39,6 +40,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [auth, toast]);
 
+  const signupWithGoogle = useCallback(() => {
+    initiateGoogleSignIn(auth);
+     toast({
+      title: "Signed in with Google",
+      description: "Welcome to CineVault!",
+    });
+  }, [auth, toast]);
+
+
   const logout = useCallback(() => {
     signOut(auth);
     toast({
@@ -49,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   return (
-    <AuthContext.Provider value={{ user, isUserLoading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isUserLoading, login, signup, logout, signupWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );
