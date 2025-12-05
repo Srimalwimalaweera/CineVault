@@ -35,22 +35,8 @@ const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters long."),
   description: z.string().min(10, "Description must be at least 10 characters long."),
   videoUrl: z.string().url("Please enter a valid URL."),
-  thumbnail: z.custom<FileList>().refine((files) => files?.length > 0, 'Thumbnail is required.'),
+  thumbnailUrl: z.string().url("Please enter a valid thumbnail URL."),
 });
-
-// This is a placeholder. In a real app, you would upload the file to a service like Firebase Storage
-// and get a URL back.
-async function uploadFile(file: File): Promise<string> {
-  console.log(`Simulating upload for ${file.name}`);
-  return new Promise(resolve => {
-    setTimeout(() => {
-      // Create a blob URL to simulate an uploaded file URL
-      const blobUrl = URL.createObjectURL(file);
-      console.log(`Generated blob URL: ${blobUrl}`);
-      resolve(blobUrl);
-    }, 1000);
-  });
-}
 
 export function AdminUploadDialog() {
   const [open, setOpen] = useState(false);
@@ -63,23 +49,20 @@ export function AdminUploadDialog() {
       title: "",
       description: "",
       videoUrl: "",
+      thumbnailUrl: "",
     },
   });
-  
-  const thumbnailRef = form.register("thumbnail");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) return;
     const videosCollection = collection(firestore, 'videos');
 
     try {
-        const thumbnailUrl = await uploadFile(values.thumbnail[0]);
-
         const newVideo = {
             title: values.title,
             description: values.description,
             videoUrl: values.videoUrl,
-            thumbnailUrl: thumbnailUrl,
+            thumbnailUrl: values.thumbnailUrl,
             ratings: Math.round((Math.random() * (5 - 3) + 3) * 10) / 10,
             reactionCount: Math.floor(Math.random() * 5000),
             downloadCount: Math.floor(Math.random() * 10000),
@@ -99,7 +82,7 @@ export function AdminUploadDialog() {
     } catch (error) {
          toast({
             title: "Upload Failed",
-            description: "There was an error uploading your video. Please try again.",
+            description: "There was an error submitting your video. Please try again.",
             variant: "destructive"
         });
     }
@@ -107,18 +90,18 @@ export function AdminUploadDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button variant="outline" className="hidden md:inline-flex">
-            <UploadCloud className="mr-2 h-4 w-4" />
-            Admin Upload
-          </Button>
-        </DialogTrigger>
-        <DialogTrigger asChild>
-          <Button size="icon" className="md:hidden h-16 w-16 rounded-full shadow-lg bg-primary text-primary-foreground hover:bg-primary/90">
-             <PlusSquare className="h-8 w-8" />
-             <span className="sr-only">Upload Video</span>
-          </Button>
-        </DialogTrigger>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="hidden md:inline-flex">
+          <UploadCloud className="mr-2 h-4 w-4" />
+          Admin Upload
+        </Button>
+      </DialogTrigger>
+      <DialogTrigger asChild>
+        <Button size="icon" className="md:hidden h-16 w-16 rounded-full shadow-lg bg-primary text-primary-foreground hover:bg-primary/90">
+            <PlusSquare className="h-8 w-8" />
+            <span className="sr-only">Upload Video</span>
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle className="font-headline">Upload Video</DialogTitle>
@@ -169,12 +152,12 @@ export function AdminUploadDialog() {
             />
              <FormField
               control={form.control}
-              name="thumbnail"
-              render={() => (
+              name="thumbnailUrl"
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Thumbnail</FormLabel>
+                  <FormLabel>Thumbnail URL</FormLabel>
                   <FormControl>
-                    <Input type="file" accept="image/*" {...thumbnailRef} />
+                    <Input placeholder="https://your-drive-link/image.jpg" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
