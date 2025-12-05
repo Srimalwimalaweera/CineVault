@@ -12,7 +12,7 @@ export default function Home() {
           <h1 className="mb-6 font-headline text-3xl font-bold tracking-tight md:text-4xl">
             Trending Videos
           </h1>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
             {videos.map((video) => (
               <VideoCard key={video.id} video={video} />
             ))}
