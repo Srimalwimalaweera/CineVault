@@ -54,10 +54,10 @@ export function AdminUploadDialog() {
     },
   });
   
-  const handlePaste = async () => {
+  const handlePaste = async (fieldName: "videoUrl" | "thumbnailUrl") => {
     try {
       const text = await navigator.clipboard.readText();
-      form.setValue('thumbnailUrl', text, { shouldValidate: true });
+      form.setValue(fieldName, text, { shouldValidate: true });
       toast({
         title: "Pasted from clipboard!",
       });
@@ -160,9 +160,14 @@ export function AdminUploadDialog() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Video URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://example.com/video.mp4" {...field} />
-                  </FormControl>
+                   <div className="relative">
+                    <FormControl>
+                      <Input placeholder="https://example.com/video.mp4" {...field} className="pr-10"/>
+                    </FormControl>
+                    <Button type="button" size="icon" variant="ghost" className="absolute top-1/2 right-1 -translate-y-1/2 h-8 w-8" onClick={() => handlePaste('videoUrl')} aria-label="Paste from clipboard">
+                        <Clipboard className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -177,7 +182,7 @@ export function AdminUploadDialog() {
                     <FormControl>
                       <Input placeholder="https://your-drive-link/image.jpg" {...field} className="pr-10"/>
                     </FormControl>
-                    <Button type="button" size="icon" variant="ghost" className="absolute top-1/2 right-1 -translate-y-1/2 h-8 w-8" onClick={handlePaste} aria-label="Paste from clipboard">
+                    <Button type="button" size="icon" variant="ghost" className="absolute top-1/2 right-1 -translate-y-1/2 h-8 w-8" onClick={() => handlePaste('thumbnailUrl')} aria-label="Paste from clipboard">
                         <Clipboard className="h-4 w-4" />
                     </Button>
                   </div>
@@ -196,5 +201,3 @@ export function AdminUploadDialog() {
     </Dialog>
   );
 }
-
-    
