@@ -4,11 +4,9 @@ export type Video = {
   description: string;
   videoUrl: string;
   thumbnailUrl: string;
-  thumbnailHint: string;
-  stats: {
-    rating: number;
-    reactions: number;
-    downloads: number;
-    views: number;
-  };
+  thumbnailHint?: string;
+  ratings?: number;
+  reactionCount?: number;
+  downloadCount?: number;
+  viewCount?: number;
 };

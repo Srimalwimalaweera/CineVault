@@ -5,6 +5,9 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UploadCloud, PlusSquare } from "lucide-react";
+import { useFirestore } from "@/firebase";
+import { collection } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -35,9 +38,24 @@ const formSchema = z.object({
   thumbnail: z.custom<FileList>().refine((files) => files?.length > 0, 'Thumbnail is required.'),
 });
 
+// This is a placeholder. In a real app, you would upload the file to a service like Firebase Storage
+// and get a URL back.
+async function uploadFile(file: File): Promise<string> {
+  console.log(`Simulating upload for ${file.name}`);
+  return new Promise(resolve => {
+    setTimeout(() => {
+      // Create a blob URL to simulate an uploaded file URL
+      const blobUrl = URL.createObjectURL(file);
+      console.log(`Generated blob URL: ${blobUrl}`);
+      resolve(blobUrl);
+    }, 1000);
+  });
+}
+
 export function AdminUploadDialog() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,17 +68,41 @@ export function AdminUploadDialog() {
   
   const thumbnailRef = form.register("thumbnail");
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Simulating video upload:", {
-        ...values,
-        thumbnail: values.thumbnail[0].name
-    });
-    toast({
-      title: "Video Submitted",
-      description: `"${values.title}" has been added to the database.`,
-    });
-    form.reset();
-    setOpen(false);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!firestore) return;
+    const videosCollection = collection(firestore, 'videos');
+
+    try {
+        const thumbnailUrl = await uploadFile(values.thumbnail[0]);
+
+        const newVideo = {
+            title: values.title,
+            description: values.description,
+            videoUrl: values.videoUrl,
+            thumbnailUrl: thumbnailUrl,
+            ratings: Math.round((Math.random() * (5 - 3) + 3) * 10) / 10,
+            reactionCount: Math.floor(Math.random() * 5000),
+            downloadCount: Math.floor(Math.random() * 10000),
+            viewCount: Math.floor(Math.random() * 200000),
+        };
+        
+        addDocumentNonBlocking(videosCollection, newVideo);
+
+        toast({
+            title: "Video Submitted",
+            description: `"${values.title}" has been added to the database.`,
+        });
+        
+        form.reset();
+        setOpen(false);
+
+    } catch (error) {
+         toast({
+            title: "Upload Failed",
+            description: "There was an error uploading your video. Please try again.",
+            variant: "destructive"
+        });
+    }
   }
 
   return (
@@ -139,7 +181,9 @@ export function AdminUploadDialog() {
               )}
             />
             <DialogFooter>
-              <Button type="submit">Upload Video</Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? 'Uploading...' : 'Upload Video'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

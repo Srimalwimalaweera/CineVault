@@ -1,4 +1,7 @@
-import { videos } from '@/lib/data';
+'use client';
+import { useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Star, ThumbsUp, Download, Eye, Link as LinkIcon } from 'lucide-react';
@@ -7,25 +10,66 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-
-export async function generateStaticParams() {
-  return videos.map((video) => ({
-    id: video.id,
-  }));
-}
+import type { Video } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function VideoDetailPage({ params }: { params: { id: string } }) {
-  const video = videos.find((v) => v.id === params.id);
+  const firestore = useFirestore();
+
+  const videoRef = useMemoFirebase(() => {
+    if (!firestore || !params.id) return null;
+    return doc(firestore, 'videos', params.id);
+  }, [firestore, params.id]);
+
+  const { data: video, isLoading } = useDoc<Video>(videoRef);
+
+  if (isLoading) {
+    return (
+       <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1">
+          <div className="container py-12">
+            <div className="grid gap-8 md:grid-cols-3 lg:gap-12">
+              <div className="md:col-span-1">
+                <Skeleton className="relative aspect-[2/3] w-full overflow-hidden rounded-lg shadow-lg" />
+              </div>
+              <div className="md:col-span-2 space-y-4">
+                <Skeleton className="h-10 w-3/4" />
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-5/6" />
+
+                <div className="flex flex-wrap items-center gap-4 pt-4">
+                  <Skeleton className="h-10 w-24 rounded-full" />
+                  <Skeleton className="h-10 w-24 rounded-full" />
+                  <Skeleton className="h-10 w-24 rounded-full" />
+                  <Skeleton className="h-10 w-24 rounded-full" />
+                </div>
+                <Separator className="my-8" />
+                 <div className="space-y-4">
+                    <Skeleton className="h-8 w-1/4" />
+                    <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                        <Skeleton className="h-6 w-full" />
+                        <Skeleton className="h-10 w-32" />
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!video) {
     notFound();
   }
   
   const stats = [
-    { icon: Star, value: video.stats.rating.toFixed(1), label: 'Rating', color: 'text-yellow-400 fill-yellow-400' },
-    { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.stats.reactions), label: 'Reactions' },
-    { icon: Download, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.stats.downloads), label: 'Downloads' },
-    { icon: Eye, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.stats.views), label: 'Views' },
+    { icon: Star, value: video.ratings?.toFixed(1) || 'N/A', label: 'Rating', color: 'text-yellow-400 fill-yellow-400' },
+    { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.reactionCount || 0), label: 'Reactions' },
+    { icon: Download, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.downloadCount || 0), label: 'Downloads' },
+    { icon: Eye, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.viewCount || 0), label: 'Views' },
   ]
 
   return (
@@ -36,7 +80,7 @@ export default function VideoDetailPage({ params }: { params: { id: string } }) 
           <div className="grid gap-8 md:grid-cols-3 lg:gap-12">
             <div className="md:col-span-1">
               <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg shadow-lg">
-                <Image src={video.thumbnailUrl} alt={video.title} fill className="object-cover" data-ai-hint={video.thumbnailHint}/>
+                <Image src={video.thumbnailUrl} alt={video.title} fill className="object-cover" />
               </div>
             </div>
             <div className="md:col-span-2">

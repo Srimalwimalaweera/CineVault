@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuthContext } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -14,7 +14,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
@@ -26,8 +25,7 @@ type LoginFormProps = {
 };
 
 export function LoginForm({ setOpen }: LoginFormProps) {
-  const { login } = useAuth();
-  const { toast } = useToast();
+  const { login } = useAuthContext();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -38,12 +36,7 @@ export function LoginForm({ setOpen }: LoginFormProps) {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Simulating login for:", values.email);
-    login();
-    toast({
-      title: "Login Successful",
-      description: "Welcome back to CineVault!",
-    });
+    login(values.email, values.password);
     setOpen(false);
   }
 
@@ -76,8 +69,8 @@ export function LoginForm({ setOpen }: LoginFormProps) {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">
-          Login
+        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting ? 'Logging in...' : 'Login'}
         </Button>
       </form>
     </Form>
