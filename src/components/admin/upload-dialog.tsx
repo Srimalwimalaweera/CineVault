@@ -4,7 +4,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { UploadCloud } from "lucide-react";
+import { UploadCloud, PlusSquare } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -62,10 +62,16 @@ export function AdminUploadDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <UploadCloud className="mr-2 h-4 w-4" />
-          Admin Upload
-        </Button>
+        <>
+          <Button variant="outline" className="hidden md:inline-flex">
+            <UploadCloud className="mr-2 h-4 w-4" />
+            Admin Upload
+          </Button>
+          <Button size="icon" className="md:hidden h-16 w-16 rounded-full shadow-lg bg-primary text-primary-foreground hover:bg-primary/90">
+             <PlusSquare className="h-8 w-8" />
+             <span className="sr-only">Upload Video</span>
+          </Button>
+        </>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>

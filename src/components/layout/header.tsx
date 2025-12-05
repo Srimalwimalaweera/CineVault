@@ -31,7 +31,9 @@ export function Header() {
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
-            <AdminUploadDialog />
+            <div className="hidden md:block">
+              <AdminUploadDialog />
+            </div>
             {isLoggedIn ? (
                <DropdownMenu>
                 <DropdownMenuTrigger asChild>

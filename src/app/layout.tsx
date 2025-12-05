@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/hooks/use-auth';
+import { BottomNav } from '@/components/layout/bottom-nav';
 
 export const metadata: Metadata = {
   title: 'CineVault',
@@ -22,7 +23,10 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
-          {children}
+          <div className="relative flex min-h-screen w-full flex-col">
+            <div className="pb-16 md:pb-0">{children}</div>
+            <BottomNav />
+          </div>
           <Toaster />
         </AuthProvider>
       </body>
