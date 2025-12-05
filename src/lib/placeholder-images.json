@@ -1,3 +1,64 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "video1",
+      "description": "A person in a spacesuit looking at a nebula",
+      "imageUrl": "https://images.unsplash.com/photo-1749215056698-bb4c38995fa9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzY2ktZmklMjBzcGFjZXxlbnwwfHx8fDE3NjQ5NTUwOTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sci-fi space"
+    },
+    {
+      "id": "video2",
+      "description": "A person in a futuristic city with neon lights",
+      "imageUrl": "https://images.unsplash.com/photo-1561344640-2453889cde5b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Y3liZXJwdW5rJTIwY2l0eXxlbnwwfHx8fDE3NjQ4OTA1Nzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cyberpunk city"
+    },
+    {
+      "id": "video3",
+      "description": "An underwater city with glowing structures",
+      "imageUrl": "https://images.unsplash.com/photo-1687230586055-328a7beb2f23?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx1bmRlcndhdGVyJTIwY2l0eXxlbnwwfHx8fDE3NjQ4NjcyNDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "underwater city"
+    },
+    {
+      "id": "video4",
+      "description": "A clock face merging with a galaxy",
+      "imageUrl": "https://images.unsplash.com/photo-1555953816-7b9c0155b98a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx0aW1lJTIwdHJhdmVsfGVufDB8fHx8MTc2NDk2OTY2NXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "time travel"
+    },
+    {
+      "id": "video5",
+      "description": "The dark expanse of space with a single, distant star",
+      "imageUrl": "https://images.unsplash.com/photo-1502134249126-9f3755a50d78?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxkZWVwJTIwc3BhY2V8ZW58MHx8fHwxNzY0OTI2Njc2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "deep space"
+    },
+    {
+      "id": "video6",
+      "description": "A double helix DNA strand with glowing light",
+      "imageUrl": "https://images.unsplash.com/photo-1580982172599-18d332f3528f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxnZW5ldGljJTIwZW5naW5lZXJpbmd8ZW58MHx8fHwxNzY0OTcxMDYyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "genetic engineering"
+    },
+    {
+      "id": "video7",
+      "description": "A golden birdcage with the door slightly ajar",
+      "imageUrl": "https://images.unsplash.com/photo-1760554090848-33277856551b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxnb2xkZW4lMjBjYWdlfGVufDB8fHx8MTc2NDk3MTA2Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "golden cage"
+    },
+    {
+      "id": "video8",
+      "description": "A barren, red-rock planet with two suns in the sky",
+      "imageUrl": "https://images.unsplash.com/photo-1683217617813-9c77d57028f3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxhbGllbiUyMHBsYW5ldHxlbnwwfHx8fDE3NjQ4OTkxNzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "alien planet"
+    },
+    {
+      "id": "video9",
+      "description": "A silhouette of a head with a maze inside",
+      "imageUrl": "https://images.unsplash.com/photo-1749935840713-e11b8933dd83?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxwc3ljaG9sb2dpY2FsJTIwdGhyaWxsZXJ8ZW58MHx8fHwxNzY0OTA5OTAzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "psychological thriller"
+    },
+    {
+      "id": "video10",
+      "description": "An army of humanoid robots standing in formation",
+      "imageUrl": "https://images.unsplash.com/photo-1712777854622-b9d9dd0491fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cm9ib3QlMjBhcm15fGVufDB8fHx8MTc2NDg2OTE5OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "robot army"
+    }
+  ]
 }
