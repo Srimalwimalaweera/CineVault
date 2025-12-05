@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { UploadCloud, PlusSquare } from "lucide-react";
+import { UploadCloud, PlusSquare, Clipboard } from "lucide-react";
 import { useFirestore } from "@/firebase";
 import { collection } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase";
@@ -52,6 +53,22 @@ export function AdminUploadDialog() {
       thumbnailUrl: "",
     },
   });
+  
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      form.setValue('thumbnailUrl', text, { shouldValidate: true });
+      toast({
+        title: "Pasted from clipboard!",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to paste",
+        description: "Could not read from clipboard. Please check browser permissions.",
+        variant: "destructive"
+      })
+    }
+  }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) return;
@@ -156,9 +173,14 @@ export function AdminUploadDialog() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Thumbnail URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://your-drive-link/image.jpg" {...field} />
-                  </FormControl>
+                  <div className="relative">
+                    <FormControl>
+                      <Input placeholder="https://your-drive-link/image.jpg" {...field} className="pr-10"/>
+                    </FormControl>
+                    <Button type="button" size="icon" variant="ghost" className="absolute top-1/2 right-1 -translate-y-1/2 h-8 w-8" onClick={handlePaste} aria-label="Paste from clipboard">
+                        <Clipboard className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -174,3 +196,5 @@ export function AdminUploadDialog() {
     </Dialog>
   );
 }
+
+    
