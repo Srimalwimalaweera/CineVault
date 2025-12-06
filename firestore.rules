@@ -1,3 +1,4 @@
+
 /**
  * This ruleset enforces a security model for the CineVault application, which
  * manages a public collection of videos and private, user-specific data like
@@ -112,14 +113,13 @@ service cloud.firestore {
     /**
      * @description Publicly readable video metadata. Writes are restricted to admins.
      * @path /videos/{videoId}
-     * @allow (get) Any user, authenticated or not, can read a video's details.
+     * @allow (read) Any user, authenticated or not, can read a video's details.
      * @deny (create) A non-admin user cannot add a new video.
      * @principle Public read access for general content, with centralized, role-based control for content management.
      */
     match /videos/{videoId} {
-      allow get, list: if true;
-      allow create: if isAdmin();
-      allow update, delete: if isAdmin() && resource != null;
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     /**
