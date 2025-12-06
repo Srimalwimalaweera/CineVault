@@ -28,7 +28,6 @@ export default function RootLayout({
           attribute="class"
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange
         >
           <FirebaseClientProvider>
             <AuthProvider>
