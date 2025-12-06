@@ -13,9 +13,8 @@ import { Footer } from '@/components/layout/footer';
 import type { Video } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function VideoDetailPage({ params }: { params: { id: string } }) {
+export default function VideoDetailPage({ params: { id } }: { params: { id: string } }) {
   const firestore = useFirestore();
-  const { id } = params;
 
   const videoRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
