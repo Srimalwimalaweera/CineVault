@@ -5,7 +5,7 @@ import { AuthProvider } from '@/hooks/use-auth';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ThemeProvider } from '@/components/theme-provider';
-
+export const runtime = 'edge';
 export const metadata: Metadata = {
   title: 'CineVault',
   description: 'Your personal vault for cinematic treasures.',
