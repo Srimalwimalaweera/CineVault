@@ -15,11 +15,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function VideoDetailPage({ params }: { params: { id: string } }) {
   const firestore = useFirestore();
+  const { id } = params;
 
   const videoRef = useMemoFirebase(() => {
-    if (!firestore || !params.id) return null;
-    return doc(firestore, 'videos', params.id);
-  }, [firestore, params.id]);
+    if (!firestore || !id) return null;
+    return doc(firestore, 'videos', id);
+  }, [firestore, id]);
 
   const { data: video, isLoading } = useDoc<Video>(videoRef);
 
