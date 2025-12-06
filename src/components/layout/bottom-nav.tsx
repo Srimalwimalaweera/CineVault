@@ -16,7 +16,7 @@ const navItems = [
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { user } = useAuthContext();
+  const { user, isAdmin } = useAuthContext();
   const isLoggedIn = !!user;
 
   const centralIndex = Math.floor(navItems.length / 2);
@@ -38,7 +38,7 @@ export function BottomNav() {
           </Link>
         ))}
 
-        {isLoggedIn && (
+        {isAdmin && (
           <div className="-mt-6">
             <AdminUploadDialog />
           </div>

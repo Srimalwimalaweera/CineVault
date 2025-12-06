@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, ReactNode, useCallback, useState, useEffect } from 'react';
 import { useUser, useAuth, useFirestore } from '@/firebase/provider';
 import type { User } from 'firebase/auth';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
@@ -13,6 +13,7 @@ import { setDocumentNonBlocking } from '@/firebase';
 type AuthContextType = {
   user: User | null;
   isUserLoading: boolean;
+  isAdmin: boolean;
   login: (email: string, password: string) => void;
   signup: (email: string, password: string) => void;
   signupWithGoogle: () => void;
@@ -26,6 +27,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const auth = useAuth();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      user.getIdTokenResult().then(idTokenResult => {
+        setIsAdmin(!!idTokenResult.claims.admin);
+      });
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user]);
 
   const createUserProfile = useCallback(async (user: User) => {
     if (!firestore || !user) return;
@@ -102,7 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   return (
-    <AuthContext.Provider value={{ user, isUserLoading, login, signup, logout, signupWithGoogle }}>
+    <AuthContext.Provider value={{ user, isUserLoading, isAdmin, login, signup, logout, signupWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );

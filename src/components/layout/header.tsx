@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export function Header() {
-  const { user, isUserLoading, logout } = useAuthContext();
+  const { user, isUserLoading, logout, isAdmin } = useAuthContext();
   const isLoggedIn = !!user;
 
   const getInitials = (email: string | null | undefined) => {
@@ -39,7 +39,7 @@ export function Header() {
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
           <ThemeToggle />
-          {isLoggedIn && (
+          {isAdmin && (
             <div className="hidden md:block">
               <AdminUploadDialog />
             </div>
