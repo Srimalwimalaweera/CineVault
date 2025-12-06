@@ -40,12 +40,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [auth, toast]);
 
-  const signupWithGoogle = useCallback(() => {
-    initiateGoogleSignIn(auth);
-     toast({
-      title: "Signed in with Google",
-      description: "Welcome to CineVault!",
-    });
+  const signupWithGoogle = useCallback(async () => {
+    try {
+      await initiateGoogleSignIn(auth);
+      toast({
+        title: "Signed in with Google",
+        description: "Welcome to CineVault!",
+      });
+    } catch (error: any) {
+      console.error("Google Sign-In Error:", error);
+      toast({
+        variant: "destructive",
+        title: "Google Sign-In Failed",
+        description: error.message || "An unknown error occurred. Please try again.",
+      });
+    }
   }, [auth, toast]);
 
 

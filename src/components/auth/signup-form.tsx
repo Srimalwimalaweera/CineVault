@@ -55,8 +55,8 @@ export function SignUpForm({ setOpen }: SignUpFormProps) {
     setOpen(false);
   }
 
-  const handleGoogleSignUp = () => {
-    signupWithGoogle();
+  const handleGoogleSignUp = async () => {
+    await signupWithGoogle();
     setOpen(false);
   }
 

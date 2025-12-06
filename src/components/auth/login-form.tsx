@@ -50,8 +50,8 @@ export function LoginForm({ setOpen }: LoginFormProps) {
     setOpen(false);
   }
   
-  const handleGoogleSignIn = () => {
-    signupWithGoogle();
+  const handleGoogleSignIn = async () => {
+    await signupWithGoogle();
     setOpen(false);
   }
 
