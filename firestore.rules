@@ -8,8 +8,7 @@
  * The security model is built on two key principles:
  * 1. Public Read, Admin Write: A central collection of videos is readable
  *    by anyone to allow for browsing. However, all modifications (create, update,
- *    delete) to this collection are restricted to administrative users identified
- *    by a custom claim.
+ *    delete) to this collection are restricted to administrative users.
  * 2. Strict User Ownership: All user-generated content (profiles, favorites,
  *    playlists) is stored in a path dedicated to that user (`/users/{userId}`).
  *    Access is strictly limited to the authenticated user who owns that data,
@@ -23,8 +22,7 @@
  *
  * Key Security Decisions:
  * - Admin Role for Content Management: Write operations on `/videos` are
- *   protected by an `isAdmin()` check, which relies on a custom auth token
- *   claim (`request.auth.token.admin == true`).
+ *   protected by checking the user's role in their profile document.
  * - Path-Based Ownership: User data is secured by matching the authenticated
  *   user's UID against the `{userId}` wildcard in the document path.
  * - User Profile Security: Users can create and update their own profiles but
@@ -56,10 +54,11 @@ service cloud.firestore {
     }
 
     /**
-     * Checks if the user has administrative privileges via a custom token claim.
+     * Checks if the user has administrative privileges by reading their user document.
+     * Note: This is less performant than using custom claims but suitable for development.
      */
-    function isAdmin() {
-      return isSignedIn() && request.auth.token.admin == true;
+    function isDbAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     /**
@@ -87,7 +86,7 @@ service cloud.firestore {
      */
     match /videos/{videoId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isDbAdmin();
     }
 
     /**
@@ -95,7 +94,7 @@ service cloud.firestore {
      * @path /users/{userId}
      */
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      allow read: if isOwner(userId) || isDbAdmin();
       allow create: if isOwner(userId) && isRoleUserOnCreate();
       allow update: if isOwner(userId) && isRoleImmutable();
       // Deleting user profiles is disabled to maintain data integrity.

@@ -1,7 +1,9 @@
+
 "use client";
 
 import React, { createContext, useContext, ReactNode, useCallback, useState, useEffect } from 'react';
-import { useUser, useAuth, useFirestore } from '@/firebase/provider';
+import { useUser, useAuth, useFirestore, useMemoFirebase } from '@/firebase/provider';
+import { useDoc } from '@/firebase';
 import type { User } from 'firebase/auth';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { signOut } from 'firebase/auth';
@@ -9,6 +11,9 @@ import { useToast } from './use-toast';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase';
 
+type UserProfile = {
+  role: string;
+}
 
 type AuthContextType = {
   user: User | null;
@@ -27,17 +32,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const auth = useAuth();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const [isAdmin, setIsAdmin] = useState(false);
+  
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "users", user.uid);
+  }, [firestore, user]);
 
-  useEffect(() => {
-    if (user) {
-      user.getIdTokenResult().then(idTokenResult => {
-        setIsAdmin(!!idTokenResult.claims.admin);
-      });
-    } else {
-      setIsAdmin(false);
-    }
-  }, [user]);
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+
+  const isAdmin = userProfile?.role === 'admin';
 
   const createUserProfile = useCallback(async (user: User) => {
     if (!firestore || !user) return;
