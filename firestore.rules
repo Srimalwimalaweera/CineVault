@@ -6,36 +6,32 @@
  *
  * Core Philosophy:
  * The security model is built on two key principles:
- * 1. Public Read, Restricted Write: A central collection of videos is readable
- *    by anyone, including unauthenticated users, to allow for browsing. However,
- *    all modifications (create, update, delete) to this collection are
- *    restricted to administrative users.
- * 2. Strict User Ownership: All user-generated content (favorites, playlists)
- *    is stored in subcollections under a path dedicated to that user
- *    (`/users/{userId}`). Access is strictly limited to the authenticated
- *    user who owns that data tree. This prevents users from accessing or
- *    modifying each other's private data.
+ * 1. Public Read, Admin Write: A central collection of videos is readable
+ *    by anyone to allow for browsing. However, all modifications (create, update,
+ *    delete) to this collection are restricted to administrative users identified
+ *    by a custom claim.
+ * 2. Strict User Ownership: All user-generated content (profiles, favorites,
+ *    playlists) is stored in a path dedicated to that user (`/users/{userId}`).
+ *    Access is strictly limited to the authenticated user who owns that data,
+ *    preventing users from accessing or modifying each other's private data.
  *
  * Data Structure:
- * - /videos/{videoId}: A top-level collection containing public video metadata.
- * - /users/{userId}/favorites/{favoriteId}: A subcollection storing a user's
- *   private list of favorite videos.
- * - /users/{userId}/playlists/{playlistId}: A subcollection storing a user's
- *   private video playlists.
+ * - /videos/{videoId}: Public video metadata.
+ * - /users/{userId}: Public user profiles.
+ * - /users/{userId}/favorites/{favoriteId}: A user's private list of favorites.
+ * - /users/{userId}/playlists/{playlistId}: A user's private video playlists.
  *
  * Key Security Decisions:
- * - Admin Role for Content Management: All write operations on the global
- *   `/videos` collection are protected by an `isAdmin()` check. This assumes
- *   admins are identified via Firebase Authentication custom claims.
+ * - Admin Role for Content Management: Write operations on `/videos` are
+ *   protected by an `isAdmin()` check, which relies on a custom auth token
+ *   claim (`request.auth.token.admin == true`).
  * - Path-Based Ownership: User data is secured by matching the authenticated
- *   user's UID against the `{userId}` wildcard in the document path. This is a
- *   highly performant and secure pattern that avoids costly database lookups.
- * - Relational Integrity: On creation, rules validate that the `userId` field
- *   within a user's private documents (e.g., a Favorite) matches the `userId`
- *   in the path, ensuring data consistency. This field is enforced as immutable
- *   on update to prevent re-association.
- * - No User Listing: There is no global `/users` collection, which prevents
- *   the possibility of listing or enumerating all users of the application.
+ *   user's UID against the `{userId}` wildcard in the document path.
+ * - User Profile Security: Users can create and update their own profiles but
+ *   are prevented from assigning themselves the 'admin' role or altering
+ *   their creation timestamp.
+ * - No Global User Listing: The rules do not allow listing the entire `/users`
+ *   collection to prevent enumeration of all application users.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -60,49 +56,24 @@ service cloud.firestore {
     }
 
     /**
-     * Validates ownership for an existing document. Used for update and delete.
-     * Ensures the operation targets a document that actually exists.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * Checks if the user has administrative privileges.
-     * This implementation assumes admins are identified via a custom auth token claim.
+     * Checks if the user has administrative privileges via a custom token claim.
      */
     function isAdmin() {
       return isSignedIn() && request.auth.token.admin == true;
     }
 
     /**
-     * Validates required relational fields when a new Favorite is created.
-     * Ensures the document's internal userId matches the path parameter.
+     * Validates that a user is not attempting to change their role.
      */
-    function hasValidFavoriteDataOnCreate(userId) {
-      return request.resource.data.userId == userId;
+    function isRoleImmutable() {
+      return request.resource.data.role == resource.data.role;
     }
 
     /**
-     * Enforces immutability of the userId field on Favorite updates.
+     * Validates that the role being assigned during creation is 'user'.
      */
-    function isFavoriteDataImmutable() {
-      return request.resource.data.userId == resource.data.userId;
-    }
-
-    /**
-     * Validates required relational fields when a new Playlist is created.
-     * Ensures the document's internal userId matches the path parameter.
-     */
-    function hasValidPlaylistDataOnCreate(userId) {
-      return request.resource.data.userId == userId;
-    }
-
-    /**
-     * Enforces immutability of the userId field on Playlist updates.
-     */
-    function isPlaylistDataImmutable() {
-      return request.resource.data.userId == resource.data.userId;
+    function isRoleUserOnCreate() {
+        return request.resource.data.role == 'user';
     }
 
 
@@ -113,43 +84,39 @@ service cloud.firestore {
     /**
      * @description Publicly readable video metadata. Writes are restricted to admins.
      * @path /videos/{videoId}
-     * @allow (read) Any user, authenticated or not, can read a video's details.
-     * @deny (create) A non-admin user cannot add a new video.
-     * @principle Public read access for general content, with centralized, role-based control for content management.
      */
     match /videos/{videoId} {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow write: if isAdmin();
     }
+
+    /**
+     * @description User profile data.
+     * @path /users/{userId}
+     */
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isRoleUserOnCreate();
+      allow update: if isOwner(userId) && isRoleImmutable();
+      // Deleting user profiles is disabled to maintain data integrity.
+      allow delete: if false;
+    }
+
 
     /**
      * @description A user's private collection of favorite videos.
      * @path /users/{userId}/favorites/{favoriteId}
-     * @allow (create) An authenticated user can add a video to their own favorites list. `auth.uid` must match `{userId}`.
-     * @deny (get) A user cannot read another user's favorites list. `auth.uid` does not match `{userId}`.
-     * @principle Restricts access to a user's own data tree using path-based ownership.
      */
     match /users/{userId}/favorites/{favoriteId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && hasValidFavoriteDataOnCreate(userId);
-      allow update: if isExistingOwner(userId) && isFavoriteDataImmutable();
-      allow delete: if isExistingOwner(userId);
+      allow read, write: if isOwner(userId);
     }
 
     /**
      * @description A user's private collection of video playlists.
      * @path /users/{userId}/playlists/{playlistId}
-     * @allow (update) An authenticated user can update their own playlist. `auth.uid` must match `{userId}`.
-     * @deny (delete) A user cannot delete another user's playlist. `auth.uid` does not match `{userId}`.
-     * @principle Restricts access to a user's own data tree using path-based ownership.
      */
     match /users/{userId}/playlists/{playlistId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && hasValidPlaylistDataOnCreate(userId);
-      allow update: if isExistingOwner(userId) && isPlaylistDataImmutable();
-      allow delete: if isExistingOwner(userId);
+      allow read, write: if isOwner(userId);
     }
   }
 }

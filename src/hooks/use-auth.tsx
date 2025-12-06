@@ -1,11 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, ReactNode, useCallback } from 'react';
-import { useUser, useAuth } from '@/firebase/provider';
+import { useUser, useAuth, useFirestore } from '@/firebase/provider';
 import type { User } from 'firebase/auth';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { signOut } from 'firebase/auth';
 import { useToast } from './use-toast';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase';
 
 
 type AuthContextType = {
@@ -22,7 +24,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { toast } = useToast();
+
+  const createUserProfile = useCallback(async (user: User) => {
+    if (!firestore || !user) return;
+    const userRef = doc(firestore, "users", user.uid);
+    const userProfile = {
+      displayName: user.displayName || user.email?.split('@')[0],
+      email: user.email,
+      photoURL: user.photoURL,
+      role: 'user',
+      createdAt: serverTimestamp(),
+    };
+    // Use non-blocking write
+    setDocumentNonBlocking(userRef, userProfile, { merge: true });
+  }, [firestore]);
+
 
   const login = useCallback((email: string, password: string) => {
     initiateEmailSignIn(auth, email, password);
@@ -32,17 +50,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [auth, toast]);
 
-  const signup = useCallback((email: string, password: string) => {
-    initiateEmailSignUp(auth, email, password);
-    toast({
-      title: "Account Created!",
-      description: "Welcome to CineVault!",
-    });
-  }, [auth, toast]);
+  const signup = useCallback(async (email: string, password: string) => {
+    try {
+        const userCredential = await initiateEmailSignUp(auth, email, password);
+        if (userCredential && userCredential.user) {
+            await createUserProfile(userCredential.user);
+        }
+        toast({
+            title: "Account Created!",
+            description: "Welcome to CineVault!",
+        });
+    } catch (error: any) {
+        console.error("Signup Error:", error);
+        toast({
+            variant: "destructive",
+            title: "Sign-up Failed",
+            description: error.message || "An unknown error occurred. Please try again.",
+        });
+    }
+  }, [auth, toast, createUserProfile]);
+
 
   const signupWithGoogle = useCallback(async () => {
     try {
-      await initiateGoogleSignIn(auth);
+      const userCredential = await initiateGoogleSignIn(auth);
+      if (userCredential && userCredential.user) {
+        await createUserProfile(userCredential.user);
+      }
       toast({
         title: "Signed in with Google",
         description: "Welcome to CineVault!",
@@ -55,7 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: error.message || "An unknown error occurred. Please try again.",
       });
     }
-  }, [auth, toast]);
+  }, [auth, toast, createUserProfile]);
 
 
   const logout = useCallback(() => {

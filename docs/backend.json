@@ -66,17 +66,39 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the User entity."
+          "description": "Unique identifier for the User entity, matches Firebase Auth UID."
         },
         "email": {
           "type": "string",
           "description": "Email address of the user.",
           "format": "email"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "photoURL": {
+            "type": "string",
+            "description": "URL of the user's profile picture.",
+            "format": "uri"
+        },
+        "role": {
+            "type": "string",
+            "description": "The user's role, e.g., 'user' or 'admin'.",
+            "enum": ["user", "admin"]
+        },
+        "createdAt": {
+            "type": "string",
+            "description": "The timestamp when the user profile was created.",
+            "format": "date-time"
         }
       },
       "required": [
         "id",
-        "email"
+        "email",
+        "displayName",
+        "role",
+        "createdAt"
       ]
     },
     "Favorite": {
@@ -164,6 +186,22 @@
         }
       },
       {
+        "path": "/users/{userId}",
+        "definition": {
+            "entityName": "User",
+            "schema": {
+                "$ref": "#/backend/entities/User"
+            },
+            "description": "Stores public user profile information. Each user can write to their own document. Admins can read/write any user document.",
+            "params": [
+                {
+                    "name": "userId",
+                    "description": "Unique identifier for the user, matching Firebase Auth UID."
+                }
+            ]
+        }
+      },
+      {
         "path": "/users/{userId}/favorites/{favoriteId}",
         "definition": {
           "entityName": "Favorite",
@@ -204,6 +242,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support the CineVault platform, focusing on scalability, security, and ease of management.  The structure leverages path-based ownership for user-specific data (favorites, playlists) and a flat collection for videos.  This design minimizes the need for complex security rules and `get()` calls, ensuring authorization independence. \n\n*   **Videos:** Videos are stored in a flat `/videos` collection.  This simplifies listing and querying videos. No denormalization is needed here as all videos have the same access control requirements (readable by all, writable only by admins - enforced via rules not structure).\n*   **Users:** User data is implicitly stored and managed by Firebase Authentication.\n*   **Favorites:** Each user has a dedicated `/users/{userId}/favorites/{favoriteId}` subcollection for their favorite videos. This structure enforces path-based ownership. This enables QAPs because listing favorites is scoped to the user's subcollection.\n*   **Playlists:** Similar to favorites, playlists are stored in `/users/{userId}/playlists/{playlistId}`. This enforces path-based ownership and allows users to manage their playlists independently.  It also enables QAPs as listing playlists is scoped to the user's subcollection.\n\nThis structure avoids hierarchical authorization dependencies by storing user-specific data in path-based subcollections. Security rules can easily validate `request.auth.uid` against the `userId` parameter in the path. This promotes atomic operations and simplifies debugging."
+    "reasoning": "The Firestore data structure is designed to support the CineVault platform, focusing on scalability, security, and ease of management.  The structure leverages path-based ownership for user-specific data (favorites, playlists) and a flat collection for videos.  This design minimizes the need for complex security rules and `get()` calls, ensuring authorization independence. \n\n*   **Videos:** Videos are stored in a flat `/videos` collection.  This simplifies listing and querying videos. No denormalization is needed here as all videos have the same access control requirements (readable by all, writable only by admins - enforced via rules not structure).\n*   **Users:** A `/users` collection is introduced to store public profile information for each user. This allows for features like displaying user names or roles. Security rules ensure that users can only write to their own profile and cannot elevate their privileges.\n*   **Favorites:** Each user has a dedicated `/users/{userId}/favorites/{favoriteId}` subcollection for their favorite videos. This structure enforces path-based ownership. This enables QAPs because listing favorites is scoped to the user's subcollection.\n*   **Playlists:** Similar to favorites, playlists are stored in `/users/{userId}/playlists/{playlistId}`. This enforces path-based ownership and allows users to manage their playlists independently.  It also enables QAPs as listing playlists is scoped to the user's subcollection.\n\nThis structure avoids hierarchical authorization dependencies by storing user-specific data in path-based subcollections. Security rules can easily validate `request.auth.uid` against the `userId` parameter in the path. This promotes atomic operations and simplifies debugging."
   }
 }
