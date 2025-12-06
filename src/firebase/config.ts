@@ -1,8 +1,9 @@
 export const firebaseConfig = {
-  "projectId": "studio-1931519546-9906b",
-  "appId": "1:913982485204:web:d48b9930662ea334f84141",
-  "apiKey": "AIzaSyDSBPUnijGlz0HgoSq2_JGA11PvvylxJw8",
-  "authDomain": "studio-1931519546-9906b.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "913982485204"
+  apiKey: "AIzaSyASlytkelRy-ZHXjU1XpMYZdbMVP3ElvFU",
+  authDomain: "xvault-716f7.firebaseapp.com",
+  projectId: "xvault-716f7",
+  storageBucket: "xvault-716f7.appspot.com",
+  messagingSenderId: "594230751150",
+  appId: "1:594230751150:web:56bae4bb733e2aeeeb623f",
+  measurementId: "G-FKV4T5RSRV"
 };
