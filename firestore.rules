@@ -119,7 +119,7 @@ service cloud.firestore {
      */
     match /videos/{videoId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSignedIn();
     }
 
     /**
