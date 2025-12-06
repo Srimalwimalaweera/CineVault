@@ -12,8 +12,10 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import type { Video } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import React from 'react';
 
-export default function VideoDetailPage({ params: { id } }: { params: { id: string } }) {
+export default function VideoDetailPage({ params }: { params: { id: string } }) {
+  const { id } = React.use(params);
   const firestore = useFirestore();
 
   const videoRef = useMemoFirebase(() => {
