@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Home, Flame, PlusSquare, Sparkles, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AdminUploadDialog } from '../admin/upload-dialog';
+import { useAuthContext } from '@/hooks/use-auth';
 
 const navItems = [
   { href: '/', icon: Home, label: 'Home' },
@@ -15,11 +16,15 @@ const navItems = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { user } = useAuthContext();
+  const isLoggedIn = !!user;
+
+  const centralIndex = Math.floor(navItems.length / 2);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
       <nav className="container flex h-16 items-center justify-around">
-        {navItems.slice(0, 2).map((item) => (
+        {navItems.slice(0, centralIndex).map((item) => (
           <Link
             key={item.href}
             href={item.href}
@@ -33,11 +38,13 @@ export function BottomNav() {
           </Link>
         ))}
 
-        <div className="-mt-6">
-          <AdminUploadDialog />
-        </div>
+        {isLoggedIn && (
+          <div className="-mt-6">
+            <AdminUploadDialog />
+          </div>
+        )}
 
-        {navItems.slice(2).map((item) => (
+        {navItems.slice(centralIndex).map((item) => (
           <Link
             key={item.href}
             href={item.href}
