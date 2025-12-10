@@ -26,28 +26,29 @@ const useClickDetection = (
   onTripleClick: () => void,
   delay = 250
 ) => {
-  const [clickCount, setClickCount] = React.useState(0);
+  const clickTimeout = React.useRef<NodeJS.Timeout | null>(null);
+  let clickCount = 0;
 
-  React.useEffect(() => {
-    if (clickCount === 0) return;
+  const handleClick = () => {
+    clickCount++;
 
-    const timer = setTimeout(() => {
-        if (clickCount === 1) {
-            onSingleClick();
-        } else if (clickCount === 2) {
-            onDoubleClick();
-        } else if (clickCount === 3) {
-            onTripleClick();
-        }
-        setClickCount(0);
+    if (clickTimeout.current) {
+      clearTimeout(clickTimeout.current);
+    }
+
+    clickTimeout.current = setTimeout(() => {
+      if (clickCount === 1) {
+        onSingleClick();
+      } else if (clickCount === 2) {
+        onDoubleClick();
+      } else if (clickCount >= 3) {
+        onTripleClick();
+      }
+      clickCount = 0;
     }, delay);
+  };
 
-    return () => clearTimeout(timer);
-  // The functions are wrapped in useCallback, so this is safe.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clickCount]);
-
-  return () => setClickCount(prev => prev + 1);
+  return handleClick;
 };
 
 
