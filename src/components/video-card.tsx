@@ -11,7 +11,7 @@ import { Bookmark, ListPlus, Star, ThumbsUp, Eye, Heart, Play } from 'lucide-rea
 import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { collection, serverTimestamp, doc } from 'firebase/firestore';
+import { collection, serverTimestamp, doc, deleteDoc } from 'firebase/firestore';
 import { addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import Lottie from "lottie-react";
 
@@ -39,7 +39,9 @@ const useClickDetection = (
     }, delay);
 
     return () => clearTimeout(timer);
-  }, [clickCount, onSingleClick, onDoubleClick, onTripleClick, delay]);
+  // The functions are wrapped in useCallback, so this is safe.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clickCount]);
 
   return () => setClickCount(prev => prev + 1);
 };
@@ -64,7 +66,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     return collection(firestore, `videos/${video.id}/reactions`);
   }, [firestore, video.id]);
 
-  const { data: userReaction } = useDoc<{type: 'heart' | 'fire' | 'hotFace'}>(userReactionRef);
+  const { data: userReaction } = useDoc<{type: 'heart' | 'fire' | 'hot-face'}>(userReactionRef);
   const { data: reactions } = useCollection(reactionsCollectionRef);
 
   React.useEffect(() => {
@@ -86,7 +88,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     fetchAnimations();
   }, []);
 
-  const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction', reactionType?: 'heart' | 'fire' | 'hotFace') => {
+  const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction', reactionType?: 'heart' | 'fire' | 'hot-face') => {
     if (!user || !firestore) {
       toast({ title: "Login Required", description: `Please log in to interact.`, variant: "destructive" });
       return;
@@ -147,7 +149,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   }, [userReaction, userReactionRef, handleInteraction, toast]);
 
   const onDoubleClick = React.useCallback(() => handleInteraction('reaction', 'fire'), [handleInteraction]);
-  const onTripleClick = React.useCallback(() => handleInteraction('reaction', 'hotFace'), [handleInteraction]);
+  const onTripleClick = React.useCallback(() => handleInteraction('reaction', 'hot-face'), [handleInteraction]);
 
   const handleClicks = useClickDetection(onSingleClick, onDoubleClick, onTripleClick);
   
@@ -182,7 +184,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const reactionEmojis = [
     { type: 'fire', animation: animations.fire, transform: 'translateX(-60px) translateY(10px) rotate(-30deg)' },
     { type: 'heart', animation: animations.heart, transform: 'translateY(-20px)' },
-    { type: 'hotFace', animation: animations.hotFace, transform: 'translateX(60px) translateY(10px) rotate(30deg)' },
+    { type: 'hot-face', animation: animations.hotFace, transform: 'translateX(60px) translateY(10px) rotate(30deg)' },
   ] as const;
 
   const MainReactionIcon = () => {
@@ -233,15 +235,15 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
                     <Bookmark className="h-5 w-5 mr-2" />
                     Favorite
                 </Button>
-                <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={() => handleInteraction('playlist')}>
-                    <ListPlus className="h-5 w-5 mr-2" />
-                    Add to list
-                </Button>
-                <Button asChild variant="ghost" className="rounded-none text-muted-foreground">
+                 <Button asChild variant="ghost" className="rounded-none text-muted-foreground">
                     <a href={video.videoUrl} target="_blank" rel="noopener noreferrer">
                         <Play className="h-5 w-5 mr-2" />
                         Watch now
                     </a>
+                </Button>
+                <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={() => handleInteraction('playlist')}>
+                    <ListPlus className="h-5 w-5 mr-2" />
+                    Add to list
                 </Button>
             </CardFooter>
             <div 
