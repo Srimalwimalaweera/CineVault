@@ -7,7 +7,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 export const runtime = 'edge';
 export const metadata: Metadata = {
-  title: 'CineVault',
+  title: 'XVault',
   description: 'Your personal vault for cinematic treasures.',
 };
 

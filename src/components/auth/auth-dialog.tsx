@@ -24,7 +24,7 @@ export function AuthDialog() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="font-headline">Welcome to CineVault</DialogTitle>
+          <DialogTitle className="font-headline">Welcome to XVault</DialogTitle>
           <DialogDescription>
             Access your favorites and playlists by logging in.
           </DialogDescription>

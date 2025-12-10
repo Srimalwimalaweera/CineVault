@@ -14,7 +14,7 @@ export function Footer() {
   return (
     <footer className="border-t bg-background/50">
       <div className="container py-6 text-center text-sm text-muted-foreground">
-        © {year} CineVault. All Rights Reserved.
+        © {year} XVault. All Rights Reserved.
       </div>
     </footer>
   );

@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       toast({
         title: "Login Successful",
-        description: "Welcome back to CineVault!",
+        description: "Welcome back to XVault!",
       });
     } catch (error: any) {
       if (error.code === 'auth/invalid-credential') {
@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         toast({
             title: "Account Created!",
-            description: "Welcome to CineVault!",
+            description: "Welcome to XVault!",
         });
     } catch (error: any) {
         console.error("Signup Error:", error);
@@ -129,7 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       toast({
         title: "Signed in with Google",
-        description: "Welcome to CineVault!",
+        description: "Welcome to XVault!",
       });
     } catch (error: any) {
       if (error.code === 'auth/popup-closed-by-user') {

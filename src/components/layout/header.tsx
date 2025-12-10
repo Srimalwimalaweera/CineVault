@@ -33,7 +33,7 @@ export function Header() {
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Film className="h-8 w-8 text-primary" />
             <span className="font-headline text-xl font-bold sm:inline-block">
-              CineVault
+              XVault
             </span>
           </Link>
         </div>
