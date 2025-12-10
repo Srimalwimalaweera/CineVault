@@ -3,11 +3,10 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { X, ThumbsUp, Download, Bookmark, ListPlus, Play } from 'lucide-react';
+import { X, ThumbsUp, Download, Bookmark, ListPlus, Play, ArrowLeft } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogOverlay,
   DialogTitle,
 } from '@/components/ui/dialog';
 import type { Video } from '@/lib/types';
@@ -39,7 +38,6 @@ export function VideoLightbox({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogOverlay className="bg-black/80 backdrop-blur-sm" />
       <DialogContent className="bg-transparent border-0 shadow-none p-0 w-full h-full max-w-none max-h-none flex flex-col items-center justify-center">
         <DialogTitle className="sr-only">{video.title}</DialogTitle>
         <div className="relative w-full h-full max-w-4xl max-h-[80vh] flex-1">
@@ -91,6 +89,15 @@ export function VideoLightbox({
                 </div>
             </div>
         </div>
+        <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+            className="absolute top-4 left-4 h-12 w-12 rounded-full bg-black/50 text-white hover:bg-black/75 hover:text-white"
+            aria-label="Go back"
+        >
+            <ArrowLeft className="h-6 w-6" />
+        </Button>
         <Button
             variant="ghost"
             size="icon"
