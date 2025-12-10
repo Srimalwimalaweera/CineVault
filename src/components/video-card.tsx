@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Bookmark, ListPlus, Star, ThumbsUp, Heart, Play, Download } from 'lucide-react';
+import { Bookmark, ListPlus, ThumbsUp, Play, Download } from 'lucide-react';
 import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -236,7 +236,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     if (reactionType && animations[reactionType]) {
         return <Lottie animationData={animations[reactionType]} loop={true} className="h-6 w-6" />;
     }
-    return <Heart className="h-6 w-6" />;
+    return <Lottie animationData={animations.heart} loop={true} className="h-6 w-6" />;
   };
 
   return (
@@ -261,14 +261,12 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         <div className="relative">
              <CardContent className="p-2 pt-4 text-sm text-muted-foreground">
               <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                      <span className="font-medium">Rating</span>
-                       <Rating 
-                        currentRating={userRating?.rating || 0}
-                        averageRating={averageRating}
-                        onRating={(rating) => handleInteraction('rating', rating)}
-                      />
-                  </div>
+                 <Rating
+                    starAnimation={animations.star}
+                    userRating={userRating?.rating || 0}
+                    averageRating={averageRating}
+                    onRate={(rating) => handleInteraction('rating', rating)}
+                  />
                   <div className="flex items-center gap-3">
                       {stats.map((stat, i) => (
                           <div key={i} className="flex items-center gap-1">
@@ -336,4 +334,3 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       </Card>
   );
 }
-
