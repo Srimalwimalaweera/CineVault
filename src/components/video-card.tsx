@@ -55,7 +55,7 @@ const useClickDetection = (
 };
 
 type HeartAnimation = {
-  id: number;
+  id: string;
   x: number;
   y: number;
   rotation: number;
@@ -238,9 +238,10 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   }, []);
 
   const onDoubleClick = React.useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!e.currentTarget) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const newHeart: HeartAnimation = {
-      id: Date.now(),
+      id: `${Date.now()}-${Math.random()}`,
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
       rotation: Math.random() * 40 - 20,
@@ -309,7 +310,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   return (
       <>
       <Card className="w-full max-w-2xl mx-auto overflow-hidden transition-all duration-300 ease-in-out">
-         <CardHeader className="p-4">
+         <CardHeader className={cn("p-4", "dark:bg-transparent bg-muted/30")}>
             <Link href={`/video/${video.id}`} className="group outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg">
                 <CardTitle className={cn(
                     "font-headline text-xl group-hover:underline",
