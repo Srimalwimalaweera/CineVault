@@ -107,13 +107,13 @@ export default function TrashPage() {
   }, [user, isUserLoading, isAdmin, router]);
 
   const trashedQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !isAdmin) return null;
     return query(
         collection(firestore, 'videos'),
         where('status', '==', 'trashed'),
         orderBy('trashedAt', 'desc')
     );
-  }, [firestore]);
+  }, [firestore, isAdmin]);
 
   const { data: trashedVideos, isLoading } = useCollection<Video>(trashedQuery);
   
