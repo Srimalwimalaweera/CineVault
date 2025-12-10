@@ -8,6 +8,7 @@ import {
   Dialog,
   DialogContent,
   DialogOverlay,
+  DialogTitle,
 } from '@/components/ui/dialog';
 import type { Video } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ export function VideoLightbox({ isOpen, onOpenChange, video }: VideoLightboxProp
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogOverlay className="bg-black/80 backdrop-blur-sm" />
       <DialogContent className="bg-transparent border-0 shadow-none p-0 w-full h-full max-w-none max-h-none flex items-center justify-center">
+        <DialogTitle className="sr-only">{video.title}</DialogTitle>
         <div className="relative w-full h-full max-w-4xl max-h-[80vh]">
           <Image
             src={video.thumbnailUrl}
