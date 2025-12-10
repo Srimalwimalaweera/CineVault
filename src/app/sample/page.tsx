@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuthContext } from '@/hooks/use-auth';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, serverTimestamp, addDoc, collection } from 'firebase/firestore';
+import { doc, serverTimestamp, addDoc, collection, setDoc } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreditCard, ArrowLeft, PlusCircle, XCircle, Loader2 } from 'lucide-react';
+import { CreditCard, ArrowLeft, PlusCircle, XCircle, Loader2, Database } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -91,6 +91,34 @@ export default function SamplePage() {
     return provider?.amounts || [];
   };
 
+  const seedServiceProviders = async () => {
+    if (!firestore) return;
+    const settingsDocRef = doc(firestore, 'settings', 'serviceProviders');
+    const dummyData = {
+      providers: [
+        { name: 'Dialog', status: 'allow', amounts: [50, 100, 200, 500] },
+        { name: 'Mobitel', status: 'allow', amounts: [50, 100, 250, 500] },
+        { name: 'Hutch', status: 'allow', amounts: [50, 100, 150] },
+        { name: 'Airtel', status: 'allow', amounts: [50, 100] },
+        { name: 'UnpopularCom', status: 'deny', amounts: [20, 40] },
+      ]
+    };
+    try {
+      await setDoc(settingsDocRef, dummyData);
+      toast({
+        title: 'Database Seeded',
+        description: 'Service provider data has been added to Firestore.',
+      });
+    } catch(error) {
+      console.error('Error seeding data:', error);
+      toast({
+        title: 'Seeding Failed',
+        description: 'Could not write data to Firestore. Check console for errors.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleSubmit = async () => {
     if (!user || !firestore || !isPaymentComplete) {
       toast({
@@ -142,11 +170,21 @@ export default function SamplePage() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>One-Time Pro Plan Payment</CardTitle>
-          <CardDescription>
-            Use mobile recharge cards to pay the total amount of 
-            <span className="font-bold text-foreground"> LKR {TOTAL_PAYMENT_AMOUNT.toFixed(2)}</span>.
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>One-Time Pro Plan Payment</CardTitle>
+              <CardDescription>
+                Use mobile recharge cards to pay the total amount of 
+                <span className="font-bold text-foreground"> LKR {TOTAL_PAYMENT_AMOUNT.toFixed(2)}</span>.
+              </CardDescription>
+            </div>
+            {/* Temporary button for seeding data */}
+            {!settings && (
+              <Button variant="outline" onClick={seedServiceProviders}>
+                <Database className="mr-2 h-4 w-4" /> Seed Data
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -271,3 +309,5 @@ export default function SamplePage() {
     </div>
   );
 }
+
+    
