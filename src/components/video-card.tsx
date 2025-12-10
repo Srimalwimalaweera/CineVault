@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, ListPlus, Star, ThumbsUp, Download, Eye, MessageCircle } from 'lucide-react';
+import { Bookmark, ListPlus, Star, ThumbsUp, Download, Eye } from 'lucide-react';
 import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore } from '@/firebase';
@@ -89,7 +89,7 @@ export function VideoCard({ video }: VideoCardProps) {
         </CardContent>
         <CardFooter className="grid grid-cols-2 gap-px border-t bg-muted/50 p-0">
             <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={(e) => handleInteraction(e, 'favorite')}>
-                <Heart className="h-5 w-5 mr-2" />
+                <Bookmark className="h-5 w-5 mr-2" />
                 Favorite
             </Button>
             <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={(e) => handleInteraction(e, 'playlist')}>
