@@ -310,7 +310,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   return (
       <>
       <Card className="w-full max-w-2xl mx-auto overflow-hidden transition-all duration-300 ease-in-out">
-         <CardHeader className={cn("p-4", "dark:bg-transparent bg-muted/30")}>
+         <CardHeader className={cn("p-4", "bg-black")}>
             <Link href={`/video/${video.id}`} className="group outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg">
                 <CardTitle className={cn(
                     "font-headline text-xl group-hover:underline",
