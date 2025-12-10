@@ -76,7 +76,17 @@ export default function SamplePage() {
 
   const handleCardChange = (id: number, field: keyof Omit<CardInput, 'id'>, value: string) => {
     setCardInputs(prev =>
-      prev.map(card => (card.id === id ? { ...card, [field]: value } : card))
+      prev.map(card => {
+        if (card.id === id) {
+          let finalValue = value;
+          if (field === 'pin') {
+            // Allow only numeric characters for the PIN
+            finalValue = value.replace(/\D/g, '');
+          }
+          return { ...card, [field]: finalValue };
+        }
+        return card;
+      })
     );
   };
   
@@ -238,6 +248,9 @@ export default function SamplePage() {
                     placeholder="Enter PIN"
                     value={card.pin}
                     onChange={(e) => handleCardChange(card.id, 'pin', e.target.value)}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                   />
                 </div>
                 
