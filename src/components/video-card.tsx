@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { Rating } from '@/components/rating';
 import type { Rating as RatingType } from '@/lib/types';
 import { VideoLightbox } from '@/components/video-lightbox';
+import { AddToListDialog } from '@/components/add-to-list-dialog';
 
 // Hook to detect single/double/triple clicks
 const useClickDetection = (
@@ -27,32 +28,23 @@ const useClickDetection = (
   delay = 250
 ) => {
   const [clickCount, setClickCount] = React.useState(0);
-  const clickTimer = React.useRef<NodeJS.Timeout | null>(null);
 
   React.useEffect(() => {
-    return () => {
-      if (clickTimer.current) {
-        clearTimeout(clickTimer.current);
-      }
-    };
-  }, []);
-
-  const handleClick = () => {
-    setClickCount((prev) => prev + 1);
-
-    if (clickTimer.current) {
-      clearTimeout(clickTimer.current);
-    }
-
-    clickTimer.current = setTimeout(() => {
-      if (clickCount === 0) onSingleClick(); // 1st click
-      else if (clickCount === 1) onDoubleClick(); // 2nd click
-      else if (clickCount >= 2) onTripleClick(); // 3rd click
+    const timer = setTimeout(() => {
+      if (clickCount === 1) onSingleClick();
+      else if (clickCount === 2) onDoubleClick();
+      else if (clickCount >= 3) onTripleClick();
       setClickCount(0);
     }, delay);
-  };
-  
-  return handleClick
+
+    if (clickCount === 0) {
+      clearTimeout(timer);
+    }
+
+    return () => clearTimeout(timer);
+  }, [clickCount, delay, onSingleClick, onDoubleClick, onTripleClick]);
+
+  return () => setClickCount(prev => prev + 1);
 };
 
 
@@ -175,13 +167,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     }
     
     if (type === 'playlist') {
-        const collectionRef = collection(firestore, `users/${user.uid}/playlists`);
-        const data = { name: 'My Playlist', videoIds: [video.id], userId: user.uid };
-        addDocumentNonBlocking(collectionRef, data);
-        toast({ 
-            title: "Added to Playlist",
-            description: `"${video.title}" has been added.`
-        });
+        // This is now handled by the AddToListDialog
         return;
     }
     
@@ -353,10 +339,12 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
                         </span>
                     </a>
                 </Button>
-                <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={() => handleInteraction('playlist')}>
-                    <ListPlus className="h-5 w-5 mr-2" />
-                    Add to list
-                </Button>
+                <AddToListDialog videoId={video.id}>
+                    <Button variant="ghost" className="rounded-none text-muted-foreground w-full">
+                        <ListPlus className="h-5 w-5 mr-2" />
+                        Add to list
+                    </Button>
+                </AddToListDialog>
             </CardFooter>
             <div 
               className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2"
@@ -409,4 +397,4 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   );
 }
 
-  
+    

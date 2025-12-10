@@ -19,3 +19,13 @@ export type Rating = {
     rating: number;
     createdAt: any; // Typically a Firestore Timestamp
 };
+
+export type Playlist = {
+    id: string;
+    userId: string;
+    name: string;
+    videoIds: string[];
+    createdAt: any; // Firestore Timestamp
+};
+
+    
