@@ -29,14 +29,25 @@ const useClickDetection = (
   const [clickCount, setClickCount] = React.useState(0);
 
   return (e: React.MouseEvent<HTMLDivElement>) => {
-    e.persist(); // Persist the event
+    // Capture necessary event data immediately, before the setTimeout.
+    const currentTarget = e.currentTarget;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    
+    // Create a new lightweight event object.
+    const persistedEvent = {
+        currentTarget,
+        clientX,
+        clientY,
+    } as unknown as React.MouseEvent<HTMLDivElement>;
+
     setClickCount(prev => prev + 1);
 
     setTimeout(() => {
       setClickCount(currentClickCount => {
-        if (currentClickCount === 1) onSingleClick(e);
-        else if (currentClickCount === 2) onDoubleClick(e);
-        else if (currentClickCount >= 3) onTripleClick(e);
+        if (currentClickCount === 1) onSingleClick(persistedEvent);
+        else if (currentClickCount === 2) onDoubleClick(persistedEvent);
+        else if (currentClickCount >= 3) onTripleClick(persistedEvent);
         return 0; // Reset after handling
       });
     }, delay);
@@ -446,3 +457,5 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       </>
   );
 }
+
+    
