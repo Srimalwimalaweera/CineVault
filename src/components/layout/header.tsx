@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Film } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthDialog } from '@/components/auth/auth-dialog';
 import { AdminUploadDialog } from '@/components/admin/upload-dialog';
@@ -17,6 +16,29 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/theme-toggle';
 
+const XVaultIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+      {...props}
+    >
+      <defs>
+        <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style={{stopColor: 'hsl(var(--primary))', stopOpacity: 1}} />
+          <stop offset="100%" style={{stopColor: 'hsl(var(--accent))', stopOpacity: 1}} />
+        </linearGradient>
+      </defs>
+      <path d="M6.5 17.5L17.5 6.5" stroke="url(#iconGradient)" strokeWidth="3"/>
+      <path d="M6.5 6.5L17.5 17.5" stroke="url(#iconGradient)" strokeWidth="3"/>
+    </svg>
+);
+
+
 export function Header() {
   const { user, isUserLoading, logout, isAdmin } = useAuthContext();
   const isLoggedIn = !!user;
@@ -31,7 +53,7 @@ export function Header() {
       <div className="container flex h-16 items-center">
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <Film className="h-8 w-8 text-primary" />
+            <XVaultIcon className="h-8 w-8" />
             <span className="font-headline text-xl font-bold sm:inline-block">
               XVault
             </span>
