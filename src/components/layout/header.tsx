@@ -74,7 +74,7 @@ export function Header() {
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <XVaultIcon className="h-8 w-8" />
-            <span className="relative font-headline text-xl font-bold sm:inline-block bg-gradient-to-r from-primary-foreground via-destructive to-primary-foreground bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer-brand particle-flow">
+            <span className="relative font-headline text-xl font-bold sm:inline-block bg-gradient-to-r from-primary-foreground from-40% via-destructive to-primary-foreground to-60% bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer-brand particle-flow">
               XVault
             </span>
           </Link>
