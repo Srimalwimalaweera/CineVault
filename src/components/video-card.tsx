@@ -14,6 +14,7 @@ import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase
 import { collection, serverTimestamp, doc, deleteDoc } from 'firebase/firestore';
 import { addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import Lottie from "lottie-react";
+import { cn } from '@/lib/utils';
 
 // Hook to detect single/double/triple clicks
 const useClickDetection = (
@@ -66,7 +67,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     return collection(firestore, `videos/${video.id}/reactions`);
   }, [firestore, video.id]);
 
-  const { data: userReaction } = useDoc<{type: 'heart' | 'fire' | 'hot-face'}>(userReactionRef);
+  const { data: userReaction } = useDoc<{type: 'heart' | 'fire' | 'hot-face' | 'hotFace'}>(userReactionRef);
   const { data: reactions } = useCollection(reactionsCollectionRef);
 
   React.useEffect(() => {
@@ -88,7 +89,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     fetchAnimations();
   }, []);
 
-  const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction', reactionType?: 'heart' | 'fire' | 'hot-face') => {
+  const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction', reactionType?: 'heart' | 'fire' | 'hotFace') => {
     if (!user || !firestore) {
       toast({ title: "Login Required", description: `Please log in to interact.`, variant: "destructive" });
       return;
@@ -149,7 +150,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   }, [userReaction, userReactionRef, handleInteraction, toast]);
 
   const onDoubleClick = React.useCallback(() => handleInteraction('reaction', 'fire'), [handleInteraction]);
-  const onTripleClick = React.useCallback(() => handleInteraction('reaction', 'hot-face'), [handleInteraction]);
+  const onTripleClick = React.useCallback(() => handleInteraction('reaction', 'hotFace'), [handleInteraction]);
 
   const handleClicks = useClickDetection(onSingleClick, onDoubleClick, onTripleClick);
   
@@ -184,12 +185,13 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const reactionEmojis = [
     { type: 'fire', animation: animations.fire, transform: 'translateX(-60px) translateY(10px) rotate(-30deg)' },
     { type: 'heart', animation: animations.heart, transform: 'translateY(-20px)' },
-    { type: 'hot-face', animation: animations.hotFace, transform: 'translateX(60px) translateY(10px) rotate(30deg)' },
+    { type: 'hotFace', animation: animations.hotFace, transform: 'translateX(60px) translateY(10px) rotate(30deg)' },
   ] as const;
 
   const MainReactionIcon = () => {
-    if (userReaction && userReaction.type && animations[userReaction.type]) {
-      return <Lottie animationData={animations[userReaction.type]} loop={true} className="h-6 w-6" />;
+    const reactionType = userReaction?.type;
+    if (reactionType && animations[reactionType]) {
+        return <Lottie animationData={animations[reactionType]} loop={true} className="h-6 w-6" />;
     }
     return <Heart className="h-6 w-6" />;
   };
@@ -235,10 +237,12 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
                     <Bookmark className="h-5 w-5 mr-2" />
                     Favorite
                 </Button>
-                 <Button asChild variant="ghost" className="rounded-none text-muted-foreground">
+                <Button asChild variant="ghost" className="rounded-none text-muted-foreground">
                     <a href={video.videoUrl} target="_blank" rel="noopener noreferrer">
                         <Play className="h-5 w-5 mr-2" />
-                        Watch now
+                        <span className="animate-shimmer bg-[linear-gradient(110deg,hsl(var(--foreground))_35%,hsl(var(--primary)),hsl(var(--foreground))_65%)] bg-[length:200%_100%] bg-clip-text text-transparent">
+                          Watch now
+                        </span>
                     </a>
                 </Button>
                 <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={() => handleInteraction('playlist')}>
@@ -255,7 +259,10 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
                         <div
                           key={emoji.type}
                           onClick={() => handleInteraction('reaction', emoji.type)}
-                          className={`cursor-pointer absolute transition-all duration-300 ease-out w-12 h-12 hover:scale-125 ${showReactions ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}
+                          className={cn(
+                            'cursor-pointer absolute transition-all duration-300 ease-out w-12 h-12 hover:scale-125',
+                            showReactions ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
+                          )}
                           style={{ transform: showReactions ? emoji.transform : 'translateY(0) scale(0)' }}
                         >
                           {emoji.animation && <Lottie animationData={emoji.animation} loop={true} />}
