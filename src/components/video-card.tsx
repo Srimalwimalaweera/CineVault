@@ -51,7 +51,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const firestore = useFirestore();
 
   const [showReactions, setShowReactions] = React.useState(false);
-  const [animations, setAnimations] = React.useState({ heart: null, fire: null, hotFace: null });
+  const [animations, setAnimations] = React.useState<{ heart: any; fire: any; hotFace: any; }>({ heart: null, fire: null, hotFace: null });
   const pressTimer = React.useRef<NodeJS.Timeout | null>(null);
 
   const userReactionRef = useMemoFirebase(() => {
@@ -59,7 +59,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     return doc(firestore, `videos/${video.id}/reactions`, user.uid);
   }, [firestore, user, video.id]);
 
-  const { data: userReaction } = useDoc<{type: 'heart' | 'fire' | 'hot-face'}>(userReactionRef);
+  const { data: userReaction } = useDoc<{type: 'heart' | 'fire' | 'hotFace'}>(userReactionRef);
 
   React.useEffect(() => {
     const fetchAnimations = async () => {
@@ -80,7 +80,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     fetchAnimations();
   }, []);
 
-  const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction', reactionType?: 'heart' | 'fire' | 'hot-face') => {
+  const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction', reactionType?: 'heart' | 'fire' | 'hotFace') => {
     if (!user || !firestore) {
       toast({ title: "Login Required", description: `Please log in to interact.`, variant: "destructive" });
       return;
@@ -129,7 +129,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
 
   const onSingleClick = React.useCallback(() => handleInteraction('reaction', 'heart'), [handleInteraction]);
   const onDoubleClick = React.useCallback(() => handleInteraction('reaction', 'fire'), [handleInteraction]);
-  const onTripleClick = React.useCallback(() => handleInteraction('reaction', 'hot-face'), [handleInteraction]);
+  const onTripleClick = React.useCallback(() => handleInteraction('reaction', 'hotFace'), [handleInteraction]);
 
   const handleClicks = useClickDetection(onSingleClick, onDoubleClick, onTripleClick);
   
@@ -165,11 +165,11 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const reactionEmojis = [
     { type: 'fire', animation: animations.fire, transform: 'translateX(-60px) translateY(10px) rotate(-30deg)' },
     { type: 'heart', animation: animations.heart, transform: 'translateY(-20px)' },
-    { type: 'hot-face', animation: animations.hotFace, transform: 'translateX(60px) translateY(10px) rotate(30deg)' },
+    { type: 'hotFace', animation: animations.hotFace, transform: 'translateX(60px) translateY(10px) rotate(30deg)' },
   ] as const;
 
   const MainReactionIcon = () => {
-    if (userReaction && animations[userReaction.type]) {
+    if (userReaction && userReaction.type && animations[userReaction.type]) {
       return <Lottie animationData={animations[userReaction.type]} loop={true} className="h-6 w-6" />;
     }
     return <Heart className="h-6 w-6" />;
