@@ -99,23 +99,22 @@ service cloud.firestore {
       allow write: if isOwner(userId) && isNotEscalatingRole();
       // Deleting user profiles is disabled to maintain data integrity.
       allow delete: if false;
-    }
-
-
-    /**
-     * @description A user's private collection of favorite videos.
-     * @path /users/{userId}/favorites/{favoriteId}
-     */
-    match /users/{userId}/favorites/{favoriteId} {
-      allow read, write: if isOwner(userId);
-    }
-
-    /**
-     * @description A user's private collection of video playlists.
-     * @path /users/{userId}/playlists/{playlistId}
-     */
-    match /users/{userId}/playlists/{playlistId} {
-      allow read, write: if isOwner(userId);
+      
+      /**
+       * @description A user's private collection of favorite videos.
+       * @path /users/{userId}/favorites/{favoriteId}
+       */
+      match /favorites/{favoriteId} {
+        allow read, write: if isOwner(userId);
+      }
+  
+      /**
+       * @description A user's private collection of video playlists.
+       * @path /users/{userId}/playlists/{playlistId}
+       */
+      match /playlists/{playlistId} {
+        allow read, write: if isOwner(userId);
+      }
     }
   }
 }
