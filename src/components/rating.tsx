@@ -129,7 +129,7 @@ export function Rating({
               <Star
                 key={starValue}
                 className={cn(
-                  'h-8 w-8 transition-colors',
+                  'h-24 w-24 transition-colors',
                   starValue <= ratingToShow
                     ? 'text-yellow-400 fill-yellow-400'
                     : 'text-muted-foreground/30'
