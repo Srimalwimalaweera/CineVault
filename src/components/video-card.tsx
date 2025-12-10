@@ -188,13 +188,13 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         const now = Date.now();
         const lastClick = localStorage.getItem(storageKey);
 
-        if (lastClick && (now - parseInt(lastClick)) < 20000) {
-            // Less than 20 seconds have passed, do nothing special.
+        if (lastClick && (now - parseInt(lastClick)) < 120000) {
+            // Less than 2 minutes have passed, do nothing special.
             // The browser will handle the `href` navigation.
             return;
         }
 
-        // It's the first click or more than 20 seconds have passed.
+        // It's the first click or more than 2 minutes have passed.
         localStorage.setItem(storageKey, now.toString());
 
         const videoRef = doc(firestore, 'videos', video.id);
