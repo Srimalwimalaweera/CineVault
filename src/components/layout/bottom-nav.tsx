@@ -67,16 +67,16 @@ export function BottomNav() {
            )
         })}
         
-        {/* Pro Plan Dialog Trigger */}
-        <ProPlanDialog>
-          <div className={cn(
+        <Link
+          href="/pro"
+          className={cn(
             'flex flex-col items-center gap-1 p-2 text-muted-foreground transition-colors hover:text-primary cursor-pointer',
             isProPage && 'animate-shimmer-gold-nav bg-gradient-to-r from-gold via-white to-gold bg-[length:200%_100%] bg-clip-text text-transparent'
-          )}>
-            <Crown className={cn("h-6 w-6", isProPage && "text-gold")} />
-            <span className="text-xs font-medium">Pro</span>
-          </div>
-        </ProPlanDialog>
+          )}
+        >
+          <Crown className={cn("h-6 w-6", isProPage && "text-gold")} />
+          <span className="text-xs font-medium">Pro</span>
+        </Link>
       </nav>
     </div>
   );
