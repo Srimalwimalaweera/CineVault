@@ -5,7 +5,7 @@ import { doc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import Image from 'next/image';
 import { notFound, usePathname } from 'next/navigation';
-import { Star, ThumbsUp, Eye, Link as LinkIcon } from 'lucide-react';
+import { Star, ThumbsUp, Link as LinkIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -70,7 +70,6 @@ export default function VideoDetailPage() {
   const stats = [
     { icon: Star, value: video.ratings?.toFixed(1) || 'N/A', label: 'Rating', color: 'text-yellow-400 fill-yellow-400' },
     { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.reactionCount || 0), label: 'Reactions' },
-    { icon: Eye, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.viewCount || 0), label: 'Views' },
   ]
 
   return (

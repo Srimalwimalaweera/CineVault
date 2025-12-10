@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Bookmark, ListPlus, Star, ThumbsUp, Eye, Heart, Play, Download } from 'lucide-react';
+import { Bookmark, ListPlus, Star, ThumbsUp, Heart, Play, Download } from 'lucide-react';
 import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -83,7 +83,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     return collection(firestore, `videos/${video.id}/reactions`);
   }, [firestore, video.id]);
 
-  const { data: userReaction } = useDoc<{type: 'heart' | 'fire' | 'hotFace'}>(userReactionRef);
+  const { data: userReaction } = useDoc<{type: 'heart' | 'fire' | 'hot-face'}>(userReactionRef);
   const { data: reactions } = useCollection(reactionsCollectionRef);
 
   React.useEffect(() => {
@@ -107,7 +107,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     fetchAnimations();
   }, []);
 
-  const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction', reactionType?: 'heart' | 'fire' | 'hotFace') => {
+  const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction', reactionType?: 'heart' | 'fire' | 'hot-face') => {
     if (!user || !firestore) {
       toast({ title: "Login Required", description: `Please log in to interact.`, variant: "destructive" });
       return;
@@ -168,7 +168,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   }, [userReaction, userReactionRef, handleInteraction, toast]);
 
   const onDoubleClick = React.useCallback(() => handleInteraction('reaction', 'fire'), [handleInteraction]);
-  const onTripleClick = React.useCallback(() => handleInteraction('reaction', 'hotFace'), [handleInteraction]);
+  const onTripleClick = React.useCallback(() => handleInteraction('reaction', 'hot-face'), [handleInteraction]);
 
   const handleClicks = useClickDetection(onSingleClick, onDoubleClick, onTripleClick);
   
@@ -198,7 +198,6 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const stats = [
     { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(reactions?.length || 0) },
     { icon: Download, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.downloadCount || 0) },
-    { icon: Eye, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.viewCount || 0) },
   ];
   
   const reactionEmojis = [
@@ -238,7 +237,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
              <CardContent className="p-2 pt-4 text-sm text-muted-foreground">
               <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1" title="Rating">
-                      {animations.star ? <Lottie lottieRef={starLottieRef} animationData={animations.star} loop={false} autoplay={false} className="h-4 w-4" /> : <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
+                      {animations.star ? <Lottie lottieRef={starLottieRef} animationData={animations.star} loop={false} autoplay={false} className="h-4 w-4" speed={0.4} /> : <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
                       <span className="font-semibold text-foreground">{video.ratings?.toFixed(1)}</span>
                   </div>
                   <div className="flex items-center gap-3">
