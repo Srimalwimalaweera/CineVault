@@ -101,7 +101,7 @@ export function Rating({
       className="flex items-center gap-2 cursor-pointer select-none"
       title="Rating"
     >
-      <span className="font-medium text-sm">Rating</span>
+      <span className={cn("font-medium text-sm transition-opacity", isRating && "opacity-0")}>Rating</span>
       <div className="relative flex items-center">
         <div className="flex items-center gap-1">
           {starAnimation && (
