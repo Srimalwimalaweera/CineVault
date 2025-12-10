@@ -23,11 +23,6 @@ const proFeatures = [
     title: 'Early Access',
     description: 'Watch new releases and premieres before anyone else.',
   },
-  {
-    icon: Star,
-    title: 'High-Quality Streaming',
-    description: 'Stream all content in stunning 4K resolution.',
-  },
 ];
 
 
@@ -76,4 +71,3 @@ export default function ProPage() {
     </div>
   );
 }
-
