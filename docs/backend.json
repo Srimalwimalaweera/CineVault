@@ -108,7 +108,7 @@
         "role": {
             "type": "string",
             "description": "The user's role, e.g., 'user' or 'admin'.",
-            "enum": ["user", "admin"]
+            "enum": ["user", "admin", "pro"]
         },
         "createdAt": {
             "type": "string",
@@ -242,6 +242,54 @@
         }
       },
       "required": ["userId", "videoId", "rating", "createdAt"]
+    },
+    "Settings": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Settings",
+      "type": "object",
+      "description": "Stores application-wide settings, such as service provider configurations.",
+      "properties": {
+        "providers": {
+          "type": "array",
+          "description": "A list of service providers for recharge card payments.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "description": "The name of the service provider." },
+              "status": { "type": "string", "enum": ["allow", "deny"], "description": "Whether the provider is enabled." },
+              "amounts": { "type": "array", "items": { "type": "number" }, "description": "Available recharge card amounts." }
+            },
+            "required": ["name", "status", "amounts"]
+          }
+        }
+      }
+    },
+    "Payment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Payment",
+      "type": "object",
+      "description": "Represents a payment transaction made by a user.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the payment." },
+        "userId": { "type": "string", "description": "The ID of the user making the payment." },
+        "totalAmount": { "type": "number", "description": "The total amount of the payment in LKR." },
+        "status": { "type": "string", "enum": ["pending", "completed", "failed"], "description": "The status of the payment." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of payment creation." },
+        "cards": {
+          "type": "array",
+          "description": "List of scratch cards used for the payment.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "provider": { "type": "string", "description": "The service provider of the card." },
+              "amount": { "type": "number", "description": "The value of the card." },
+              "pin": { "type": "string", "description": "The scratch card PIN." }
+            },
+            "required": ["provider", "amount", "pin"]
+          }
+        }
+      },
+      "required": ["userId", "totalAmount", "status", "createdAt", "cards"]
     }
   },
   "auth": {
@@ -257,51 +305,29 @@
         "path": "/videos/{videoId}",
         "definition": {
           "entityName": "Video",
-          "schema": {
-            "$ref": "#/backend/entities/Video"
-          },
+          "schema": { "$ref": "#/entities/Video" },
           "description": "Stores video metadata. Accessible for reading by all users. Only admins can create, update, or delete videos.",
-          "params": [
-            {
-              "name": "videoId",
-              "description": "Unique identifier for the video document."
-            }
-          ]
+          "params": [{ "name": "videoId", "description": "Unique identifier for the video document." }]
         }
       },
       {
         "path": "/users/{userId}",
         "definition": {
-            "entityName": "User",
-            "schema": {
-                "$ref": "#/backend/entities/User"
-            },
-            "description": "Stores public user profile information. Each user can write to their own document. Admins can read/write any user document.",
-            "params": [
-                {
-                    "name": "userId",
-                    "description": "Unique identifier for the user, matching Firebase Auth UID."
-                }
-            ]
+          "entityName": "User",
+          "schema": { "$ref": "#/entities/User" },
+          "description": "Stores public user profile information. Each user can write to their own document. Admins can read/write any user document.",
+          "params": [{ "name": "userId", "description": "Unique identifier for the user, matching Firebase Auth UID." }]
         }
       },
       {
         "path": "/users/{userId}/favorites/{videoId}",
         "definition": {
           "entityName": "Favorite",
-          "schema": {
-            "$ref": "#/backend/entities/Favorite"
-          },
+          "schema": { "$ref": "#/entities/Favorite" },
           "description": "Stores a user's favorite videos. Path-based ownership enforced by {userId}. The document ID is the videoId.",
           "params": [
-            {
-              "name": "userId",
-              "description": "Unique identifier for the user."
-            },
-            {
-              "name": "videoId",
-              "description": "The ID of the video being favorited."
-            }
+            { "name": "userId", "description": "Unique identifier for the user." },
+            { "name": "videoId", "description": "The ID of the video being favorited." }
           ]
         }
       },
@@ -309,19 +335,11 @@
         "path": "/users/{userId}/playlists/{playlistId}",
         "definition": {
           "entityName": "Playlist",
-          "schema": {
-            "$ref": "#/backend/entities/Playlist"
-          },
+          "schema": { "$ref": "#/entities/Playlist" },
           "description": "Stores a user's video playlists. Path-based ownership enforced by {userId}. No denormalized fields needed.",
           "params": [
-            {
-              "name": "userId",
-              "description": "Unique identifier for the user."
-            },
-            {
-              "name": "playlistId",
-              "description": "Unique identifier for the playlist."
-            }
+            { "name": "userId", "description": "Unique identifier for the user." },
+            { "name": "playlistId", "description": "Unique identifier for the playlist." }
           ]
         }
       },
@@ -329,19 +347,11 @@
         "path": "/videos/{videoId}/reactions/{userId}",
         "definition": {
           "entityName": "Reaction",
-          "schema": {
-            "$ref": "#/backend/entities/Reaction"
-          },
+          "schema": { "$ref": "#/entities/Reaction" },
           "description": "Stores a user's single reaction to a specific video. The document ID is the user's UID.",
           "params": [
-            {
-              "name": "videoId",
-              "description": "The ID of the video being reacted to."
-            },
-            {
-              "name": "userId",
-              "description": "The UID of the user who is reacting."
-            }
+            { "name": "videoId", "description": "The ID of the video being reacted to." },
+            { "name": "userId", "description": "The UID of the user who is reacting." }
           ]
         }
       },
@@ -349,23 +359,33 @@
         "path": "/videos/{videoId}/ratings/{userId}",
         "definition": {
           "entityName": "Rating",
-          "schema": {
-            "$ref": "#/backend/entities/Rating"
-          },
+          "schema": { "$ref": "#/entities/Rating" },
           "description": "Stores a user's single rating for a specific video. The document ID is the user's UID.",
           "params": [
-            {
-              "name": "videoId",
-              "description": "The ID of the video being rated."
-            },
-            {
-              "name": "userId",
-              "description": "The UID of the user who is giving the rating."
-            }
+            { "name": "videoId", "description": "The ID of the video being rated." },
+            { "name": "userId", "description": "The UID of the user who is giving the rating." }
           ]
+        }
+      },
+      {
+        "path": "/settings/serviceProviders",
+        "definition": {
+          "entityName": "Settings",
+          "schema": { "$ref": "#/entities/Settings" },
+          "description": "Stores application-wide settings, such as payment provider configurations. Publicly readable, admin writable.",
+          "params": []
+        }
+      },
+      {
+        "path": "/payments/{paymentId}",
+        "definition": {
+          "entityName": "Payment",
+          "schema": { "$ref": "#/entities/Payment" },
+          "description": "Stores records of payment transactions. Writable by authenticated users, readable by admins.",
+          "params": [{ "name": "paymentId", "description": "Unique identifier for the payment transaction." }]
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support the XVault platform, focusing on scalability, security, and ease of management. The structure leverages path-based ownership for user-specific data (favorites, playlists) and a flat collection for videos. This design minimizes the need for complex security rules and `get()` calls, ensuring authorization independence. \n\n*   **Videos:** Videos are stored in a flat `/videos` collection. This simplifies listing and querying videos. No denormalization is needed here as all videos have the same access control requirements (readable by all, writable only by admins - enforced via rules not structure).\n*   **Users:** A `/users` collection is introduced to store public profile information for each user. This allows for features like displaying user names or roles. Security rules ensure that users can only write to their own profile and cannot elevate their privileges.\n*   **Favorites:** Each user has a dedicated `/users/{userId}/favorites/{videoId}` subcollection. Using the `videoId` as the document ID provides an idempotent way to manage favorites, preventing duplicates.\n*   **Playlists:** Similar to favorites, playlists are stored in `/users/{userId}/playlists/{playlistId}`. This enforces path-based ownership and allows users to manage their playlists independently.\n*   **Reactions**: A user's reaction is stored in `/videos/{videoId}/reactions/{userId}`. Using the `userId` as the document ID ensures that each user can only have one reaction per video, simplifying the logic for creating or updating a reaction (upsert).\n*   **Ratings**: A user's rating is stored in `/videos/{videoId}/ratings/{userId}`. Using the `userId` as the document ID ensures that each user can only have one rating per video. Security rules will enforce that the rating value is between 1 and 5."
+    "reasoning": "The Firestore data structure is designed to support the XVault platform, focusing on scalability, security, and ease of management. The structure leverages path-based ownership for user-specific data (favorites, playlists) and a flat collection for videos. This design minimizes the need for complex security rules and `get()` calls, ensuring authorization independence. \n\n*   **Videos:** Videos are stored in a flat `/videos` collection. This simplifies listing and querying videos. No denormalization is needed here as all videos have the same access control requirements (readable by all, writable only by admins - enforced via rules not structure).\n*   **Users:** A `/users` collection is introduced to store public profile information for each user. This allows for features like displaying user names or roles. Security rules ensure that users can only write to their own profile and cannot elevate their privileges.\n*   **Favorites:** Each user has a dedicated `/users/{userId}/favorites/{videoId}` subcollection. Using the `videoId` as the document ID provides an idempotent way to manage favorites, preventing duplicates.\n*   **Playlists:** Similar to favorites, playlists are stored in `/users/{userId}/playlists/{playlistId}`. This enforces path-based ownership and allows users to manage their playlists independently.\n*   **Reactions**: A user's reaction is stored in `/videos/{videoId}/reactions/{userId}`. Using the `userId` as the document ID ensures that each user can only have one reaction per video, simplifying the logic for creating or updating a reaction (upsert).\n*   **Ratings**: A user's rating is stored in `/videos/{videoId}/ratings/{userId}`. Using the `userId` as the document ID ensures that each user can only have one rating per video. Security rules will enforce that the rating value is between 1 and 5.\n*   **Settings**: A singleton document at `/settings/serviceProviders` stores public, application-wide configurations. This is ideal for data that needs to be read by all clients but only modified by administrators, such as payment provider details.\n*   **Payments**: A `/payments` collection stores individual payment transactions. Users can create documents here, but security rules prevent them from reading or updating other users' payments, ensuring privacy. Admins have full access for verification and management."
   }
 }

@@ -21,6 +21,8 @@
  * - /users/{userId}: Public user profiles.
  * - /users/{userId}/favorites/{favoriteId}: A user's private list of favorites.
  * - /users/{userId}/playlists/{playlistId}: A user's private video playlists.
+ * - /settings/serviceProviders: Publicly readable app settings.
+ * - /payments/{paymentId}: User-specific payment records.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -61,7 +63,9 @@ service cloud.firestore {
     function isNotEscalatingRole() {
       // The `resource != null` check handles creation, where `resource` is null.
       let isAlreadyAdmin = resource != null && resource.data.role == 'admin';
-      return request.resource.data.role != 'admin' || isAlreadyAdmin;
+      let isPro = resource != null && resource.data.role == 'pro';
+      // An admin can change roles, but a user cannot assign themselves 'admin' or 'pro'.
+      return (request.resource.data.role != 'admin' && request.resource.data.role != 'pro') || isAlreadyAdmin || isPro;
     }
     
     /**
@@ -119,7 +123,8 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId) || isDbAdmin();
       // Allow a user to write to their own document, but prevent them from making themselves an admin.
-      allow write: if isOwner(userId) && isNotEscalatingRole();
+      // Admins can be granted the 'pro' role by an admin.
+      allow write: if (isOwner(userId) && isNotEscalatingRole()) || isDbAdmin();
       // Deleting user profiles is disabled to maintain data integrity.
       allow delete: if false;
       
@@ -138,6 +143,26 @@ service cloud.firestore {
       match /playlists/{playlistId} {
         allow read, write: if isOwner(userId);
       }
+    }
+
+    /**
+     * @description Publicly readable application settings.
+     * @path /settings/{docId}
+     */
+    match /settings/{docId} {
+        allow read: if true;
+        allow write: if isDbAdmin();
+    }
+
+    /**
+     * @description Stores payment transactions.
+     * @path /payments/{paymentId}
+     */
+    match /payments/{paymentId} {
+        allow read: if isDbAdmin(); // Only admins can view payment details.
+        // Users can create their own payment record, but cannot read/update/delete any.
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if false;
     }
   }
 }
