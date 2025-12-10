@@ -54,7 +54,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const firestore = useFirestore();
 
   const [showReactions, setShowReactions] = React.useState(false);
-  const [animations, setAnimations] = React.useState<{ heart: any; fire: any; hotFace: any; }>({ heart: null, fire: null, hotFace: null });
+  const [animations, setAnimations] = React.useState<{ heart: any; fire: any; hotFace: any; star: any; }>({ heart: null, fire: null, hotFace: null, star: null });
   const pressTimer = React.useRef<NodeJS.Timeout | null>(null);
 
   const userReactionRef = useMemoFirebase(() => {
@@ -73,15 +73,17 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   React.useEffect(() => {
     const fetchAnimations = async () => {
       try {
-        const [heartRes, fireRes, hotFaceRes] = await Promise.all([
+        const [heartRes, fireRes, hotFaceRes, starRes] = await Promise.all([
           fetch('https://fonts.gstatic.com/s/e/notoemoji/latest/2764_fe0f/lottie.json'),
           fetch('https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/lottie.json'),
-          fetch('https://fonts.gstatic.com/s/e/notoemoji/latest/1f975/lottie.json')
+          fetch('https://fonts.gstatic.com/s/e/notoemoji/latest/1f975/lottie.json'),
+          fetch('https://fonts.gstatic.com/s/e/notoemoji/latest/1f31f/lottie.json')
         ]);
         const heart = await heartRes.json();
         const fire = await fireRes.json();
         const hotFace = await hotFaceRes.json();
-        setAnimations({ heart, fire, hotFace });
+        const star = await starRes.json();
+        setAnimations({ heart, fire, hotFace, star });
       } catch (error) {
         console.error("Failed to load Lottie animations", error);
       }
@@ -219,7 +221,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
              <CardContent className="p-2 pt-4 text-sm text-muted-foreground">
               <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1" title="Rating">
-                      <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                      {animations.star ? <Lottie animationData={animations.star} loop={true} className="h-4 w-4" /> : <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
                       <span className="font-semibold text-foreground">{video.ratings?.toFixed(1)}</span>
                   </div>
                   <div className="flex items-center gap-3">
