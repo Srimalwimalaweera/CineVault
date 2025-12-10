@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -107,10 +108,10 @@ export default {
           '0%': { transform: 'translateY(100%)' },
           '100%': { transform: 'translateY(-100%)' },
         },
-        'like-heart-grow': {
-          '0%': { transform: 'scale(0)', opacity: '0' },
-          '50%': { transform: 'scale(1.2)', opacity: '1' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
+        'heart-pop': {
+          '0%': { transform: 'scale(0) translateY(0)', opacity: '0' },
+          '50%': { transform: 'scale(1.2) translateY(-40px)', opacity: '1' },
+          '100%': { transform: 'scale(1) translateY(-80px)', opacity: '0' },
         },
       },
       animation: {
@@ -119,7 +120,7 @@ export default {
         'shimmer': 'shimmer 4s linear infinite',
         'shimmer-brand': 'shimmer-brand 8s linear infinite',
         'particle-flow': 'particle-flow 10s linear infinite',
-        'like-heart-grow': 'like-heart-grow 0.5s ease-out forwards',
+        'heart-pop': 'heart-pop 1.5s cubic-bezier(0.21, 1.2, 0.81, 1) forwards',
       },
     },
   },

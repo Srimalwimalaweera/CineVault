@@ -46,6 +46,12 @@ const useClickDetection = (
   return () => setClickCount(prev => prev + 1);
 };
 
+type HeartAnimation = {
+  id: number;
+  x: number;
+  y: number;
+  rotation: number;
+};
 
 export function VideoCard({ video, priority = false }: { video: Video, priority?: boolean }) {
   const { user } = useAuthContext();
@@ -55,7 +61,8 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const [showReactions, setShowReactions] = React.useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
   const [animations, setAnimations] = React.useState<{ heart: any; fire: any; hotFace: any; star: any; }>({ heart: null, fire: null, hotFace: null, star: null });
-  const [likeAnimation, setLikeAnimation] = React.useState<{ x: number; y: number; visible: boolean } | null>(null);
+  const [hearts, setHearts] = React.useState<HeartAnimation[]>([]);
+  const likedInSession = React.useRef(false);
   const pressTimer = React.useRef<NodeJS.Timeout | null>(null);
 
   const userReactionRef = useMemoFirebase(() => {
@@ -100,6 +107,13 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     return total / ratingsData.length;
   }, [ratingsData]);
 
+  React.useEffect(() => {
+    if (userReaction) {
+      likedInSession.current = true;
+    } else {
+      likedInSession.current = false;
+    }
+  }, [userReaction]);
 
   React.useEffect(() => {
     const fetchAnimations = async () => {
@@ -138,10 +152,15 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         };
         setDocumentNonBlocking(reactionRef, newReaction, { merge: true });
         
-        toast({ 
-            title: "Reaction Added!",
-            description: `You reacted with ${value} to "${video.title}".`
-        });
+        if (value === 'heart' && !likedInSession.current) {
+          likedInSession.current = true; // Mark as liked for this session
+        } else if (value !== 'heart') {
+          toast({ 
+              title: "Reaction Added!",
+              description: `You reacted with ${value} to "${video.title}".`
+          });
+        }
+        
         setShowReactions(false);
         return;
     }
@@ -258,16 +277,25 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       }
   };
 
-  const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleThumbnailClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const newHeart: HeartAnimation = {
+      id: Date.now(),
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      rotation: Math.random() * 40 - 20, // Random rotation between -20 and 20 degrees
+    };
 
-    setLikeAnimation({ x, y, visible: true });
-    handleInteraction('reaction', 'heart');
+    setHearts(currentHearts => [...currentHearts, newHeart]);
 
+    // Only send the 'like' to DB on the first interaction
+    if (!likedInSession.current) {
+      handleInteraction('reaction', 'heart');
+    }
+
+    // Remove the heart after the animation
     setTimeout(() => {
-      setLikeAnimation(null);
+      setHearts(currentHearts => currentHearts.filter(h => h.id !== newHeart.id));
     }, 1500);
   };
 
@@ -300,7 +328,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
          </CardHeader>
         <div 
           className="group block outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
-          onDoubleClick={handleDoubleClick}
+          onClick={handleThumbnailClick}
         >
             <div className="relative w-full overflow-hidden rounded-b-lg max-h-[500px] bg-muted flex justify-center items-center">
                 <Image 
@@ -311,14 +339,19 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
                     priority={priority}
                     className="object-contain h-full w-full transition-transform duration-300 group-hover:scale-105" 
                 />
-                {likeAnimation?.visible && (
-                <div
-                    className="absolute pointer-events-none"
-                    style={{ left: likeAnimation.x, top: likeAnimation.y, transform: 'translate(-50%, -50%)' }}
-                >
-                    <Heart className="w-24 h-24 text-white fill-white animate-like-heart-grow" />
-                </div>
-                )}
+                {hearts.map(heart => (
+                  <div
+                    key={heart.id}
+                    className="pointer-events-none absolute"
+                    style={{
+                      left: heart.x,
+                      top: heart.y,
+                      transform: `rotate(${heart.rotation}deg)`,
+                    }}
+                  >
+                    <Heart className="w-24 h-24 text-white fill-white animate-heart-pop" />
+                  </div>
+                ))}
             </div>
         </div>
         <div className="relative">
