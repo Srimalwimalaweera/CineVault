@@ -11,7 +11,6 @@
  *    delete) to this collection are restricted to administrative users.
  * 2. Strict User Ownership: All user-generated content (profiles, favorites,
  *    playlists, reactions) is stored in a path dedicated to that user or
-
  *    validated against their UID. Access is strictly limited to the
  *    authenticated user who owns that data.
  *
@@ -84,9 +83,10 @@ service cloud.firestore {
        */
       match /reactions/{userId} {
         allow read: if true;
-        // Allow a user to create or update their own reaction document.
-        // The document ID must match their user ID.
-        allow write: if isOwner(userId);
+        // Allow a user to create, update, or delete their own reaction document.
+        // This covers the "upsert" logic of setDoc({ merge: true }).
+        // The `isOwner` function checks if the authenticated user's ID matches the {userId} in the path.
+        allow write, delete: if isOwner(userId);
       }
     }
 
