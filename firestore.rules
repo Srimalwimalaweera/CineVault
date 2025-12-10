@@ -62,18 +62,12 @@ service cloud.firestore {
     }
 
     /**
-     * Validates that a user is not attempting to change their role.
+     * Validates that the role being assigned is not 'admin', unless the user is already an admin.
+     * This prevents users from escalating their own privileges.
      */
-    function isRoleImmutable() {
-      // Allow role to be set on creation, but not changed on update.
-      return !exists(path) || request.resource.data.role == resource.data.role;
-    }
-
-    /**
-     * Validates that the role being assigned during creation is 'user'.
-     */
-    function isRoleUserOnCreate() {
-        return request.resource.data.role == 'user';
+    function isNotEscalatingRole() {
+      let isAlreadyAdmin = exists(path) && resource.data.role == 'admin';
+      return request.resource.data.role != 'admin' || isAlreadyAdmin;
     }
 
 
@@ -96,12 +90,8 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow read: if isOwner(userId) || isDbAdmin();
-      // Allow create and update if user is owner and not escalating role.
-      // On create, role must be 'user'. On update, role must be unchanged.
-      allow write: if isOwner(userId) && (
-        (isRoleUserOnCreate() && !exists(path)) || 
-        (isRoleImmutable() && exists(path))
-      );
+      // Allow a user to write to their own document, but prevent them from making themselves an admin.
+      allow write: if isOwner(userId) && isNotEscalatingRole();
       // Deleting user profiles is disabled to maintain data integrity.
       allow delete: if false;
     }
