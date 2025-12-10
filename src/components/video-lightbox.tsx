@@ -12,6 +12,8 @@ import {
 import type { Video } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Rating } from './rating';
+import { useFirestore } from '@/firebase';
+import { doc, updateDoc, increment } from 'firebase/firestore';
 
 interface VideoLightboxProps {
   isOpen: boolean;
@@ -34,13 +36,97 @@ export function VideoLightbox({
   stats,
   handleInteraction,
 }: VideoLightboxProps) {
+    const firestore = useFirestore();
+
+    const handleWatchNowClick = React.useCallback(async (e: React.MouseEvent<HTMLAnchorElement>) => {
+        if (!firestore) return;
+
+        const storageKey = `download_timestamp_${video.id}`;
+        const now = Date.now();
+        const lastClick = localStorage.getItem(storageKey);
+
+        if (lastClick && (now - parseInt(lastClick)) < 20000) {
+            return;
+        }
+
+        localStorage.setItem(storageKey, now.toString());
+
+        const videoRef = doc(firestore, 'videos', video.id);
+        try {
+            await updateDoc(videoRef, {
+                downloadCount: increment(1)
+            });
+        } catch (error) {
+            console.error("Error incrementing download count:", error);
+        }
+    }, [firestore, video.id]);
+
   if (!video) return null;
 
+  const [dragStart, setDragStart] = React.useState<{ y: number, time: number } | null>(null);
+  const [translateY, setTranslateY] = React.useState(0);
+  const [isDragging, setIsDragging] = React.useState(false);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    setDragStart({ y: e.clientY, time: Date.now() });
+    setIsDragging(true);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragStart) return;
+    const deltaY = e.clientY - dragStart.y;
+    setTranslateY(deltaY);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragStart) return;
+    
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    const deltaY = e.clientY - dragStart.y;
+    const deltaTime = Date.now() - dragStart.time;
+    const velocity = deltaY / deltaTime;
+
+    setIsDragging(false);
+
+    if (Math.abs(deltaY) > 100 || Math.abs(velocity) > 0.5) {
+      onOpenChange(false);
+      setTimeout(() => {
+        setTranslateY(0);
+        setDragStart(null);
+      }, 300);
+    } else {
+      setTranslateY(0);
+      setDragStart(null);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-transparent border-0 shadow-none p-0 w-full h-full max-w-none max-h-none flex flex-col items-center justify-center">
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        setTranslateY(0);
+      }
+      onOpenChange(open);
+    }}>
+       <DialogContent 
+        className="bg-transparent border-0 shadow-none p-0 w-full h-full max-w-none max-h-none flex flex-col items-center justify-center overflow-hidden" 
+        style={{
+          '--tw-bg-opacity': 1 - Math.min(Math.abs(translateY) / 500, 1),
+          transition: isDragging ? 'none' : 'transform 0.3s ease-out, background-color 0.3s ease-out',
+          transform: `translateY(${translateY}px)`,
+        }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+      >
         <DialogTitle className="sr-only">{video.title}</DialogTitle>
-        <div className="relative w-full h-full max-w-4xl max-h-[80vh] flex-1">
+        <div 
+          className="relative w-full h-full max-w-4xl max-h-[80vh] flex-1"
+          style={{ 
+            transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+            transform: `scale(${1 - Math.min(Math.abs(translateY) / 1000, 0.2)})`,
+          }}
+        >
           <Image
             src={video.thumbnailUrl}
             alt={video.title}
@@ -74,8 +160,8 @@ export function VideoLightbox({
                         <Bookmark className="h-5 w-5 mr-2" />
                         Favorite
                     </Button>
-                    <Button asChild variant="ghost" className="rounded-none text-white/90 hover:bg-white/20 hover:text-white">
-                        <a href={video.videoUrl} target="_blank" rel="noopener noreferrer">
+                     <Button asChild variant="ghost" className="rounded-none text-white/90 hover:bg-white/20 hover:text-white">
+                        <a href={video.videoUrl} target="_blank" rel="noopener noreferrer" onClick={handleWatchNowClick}>
                             <Play className="h-5 w-5 mr-2" />
                              <span className="animate-shimmer bg-[linear-gradient(110deg,hsl(var(--primary-foreground))_35%,hsl(var(--primary)),hsl(var(--primary-foreground))_65%)] bg-[length:200%_100%] bg-clip-text text-transparent">
                                 Watch now

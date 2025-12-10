@@ -11,7 +11,7 @@ import { Bookmark, ListPlus, ThumbsUp, Play, Download } from 'lucide-react';
 import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { collection, serverTimestamp, doc, deleteDoc } from 'firebase/firestore';
+import { collection, serverTimestamp, doc, deleteDoc, updateDoc, increment } from 'firebase/firestore';
 import { addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import Lottie from "lottie-react";
 import { cn } from '@/lib/utils';
@@ -181,6 +181,35 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
 
   }, [user, firestore, video.id, video.title, toast]);
 
+    const handleWatchNowClick = React.useCallback(async (e: React.MouseEvent<HTMLAnchorElement>) => {
+        if (!firestore) return;
+
+        const storageKey = `download_timestamp_${video.id}`;
+        const now = Date.now();
+        const lastClick = localStorage.getItem(storageKey);
+
+        if (lastClick && (now - parseInt(lastClick)) < 20000) {
+            // Less than 20 seconds have passed, do nothing special.
+            // The browser will handle the `href` navigation.
+            return;
+        }
+
+        // It's the first click or more than 20 seconds have passed.
+        localStorage.setItem(storageKey, now.toString());
+
+        const videoRef = doc(firestore, 'videos', video.id);
+        try {
+            await updateDoc(videoRef, {
+                downloadCount: increment(1)
+            });
+        } catch (error) {
+            console.error("Error incrementing download count:", error);
+            // We don't toast here as it could be disruptive.
+            // The link will still work.
+        }
+    }, [firestore, video.id]);
+
+
   const onSingleClick = React.useCallback(() => {
     if (userReaction) {
       if (userReactionRef) {
@@ -289,7 +318,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
                     Favorite
                 </Button>
                 <Button asChild variant="ghost" className="rounded-none text-muted-foreground">
-                    <a href={video.videoUrl} target="_blank" rel="noopener noreferrer">
+                    <a href={video.videoUrl} target="_blank" rel="noopener noreferrer" onClick={handleWatchNowClick}>
                         <Play className="h-5 w-5 mr-2" />
                         <span className="animate-shimmer bg-[linear-gradient(110deg,hsl(var(--foreground))_35%,hsl(var(--primary)),hsl(var(--foreground))_65%)] bg-[length:200%_100%] bg-clip-text text-transparent">
                           Watch now
