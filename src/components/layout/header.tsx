@@ -17,25 +17,45 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 const XVaultIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      {...props}
-    >
-      <defs>
-        <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{stopColor: 'hsl(var(--primary))', stopOpacity: 1}} />
-          <stop offset="100%" style={{stopColor: 'hsl(var(--accent))', stopOpacity: 1}} />
-        </linearGradient>
-      </defs>
-      <path d="M6.5 17.5L17.5 6.5" stroke="url(#iconGradient)" strokeWidth="3"/>
-      <path d="M6.5 6.5L17.5 17.5" stroke="url(#iconGradient)" strokeWidth="3"/>
-    </svg>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <style>
+      {`
+        @keyframes gradient-flow {
+          0% { stop-color: hsl(var(--primary)); }
+          50% { stop-color: hsl(var(--destructive)); }
+          100% { stop-color: hsl(var(--primary)); }
+        }
+        @keyframes gradient-flow-accent {
+          0% { stop-color: hsl(var(--accent)); }
+          50% { stop-color: hsl(var(--primary)); }
+          100% { stop-color: hsl(var(--accent)); }
+        }
+        #grad-stop-1 {
+          animation: gradient-flow 4s ease-in-out infinite;
+        }
+        #grad-stop-2 {
+          animation: gradient-flow-accent 4s ease-in-out infinite;
+        }
+      `}
+    </style>
+    <defs>
+      <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop id="grad-stop-1" offset="0%" />
+        <stop id="grad-stop-2" offset="100%" />
+      </linearGradient>
+    </defs>
+    <path d="M6.5 17.5L17.5 6.5" stroke="url(#iconGradient)" strokeWidth="3"/>
+    <path d="M6.5 6.5L17.5 17.5" stroke="url(#iconGradient)" strokeWidth="3"/>
+  </svg>
 );
 
 
