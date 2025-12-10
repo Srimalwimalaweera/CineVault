@@ -167,11 +167,6 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         const favRef = doc(firestore, `users/${user.uid}/favorites`, video.id);
         if (isFavorited) {
           deleteDocumentNonBlocking(favRef);
-          toast({
-            title: "Removed from Favorites",
-            description: `"${video.title}" has been removed.`,
-            variant: "destructive"
-          });
         } else {
           const favData = { videoId: video.id, userId: user.uid, createdAt: serverTimestamp() };
           setDocumentNonBlocking(favRef, favData, { merge: true });
