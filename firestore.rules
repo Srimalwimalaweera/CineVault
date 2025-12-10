@@ -82,6 +82,9 @@ service cloud.firestore {
      * @path /videos/{videoId}
      */
     match /videos/{videoId} {
+      // Allow `get` and `list` operations for all users.
+      // `get` applies to individual document reads.
+      // `list` applies to collection-level queries.
       allow read: if true;
       allow write: if isDbAdmin();
       
