@@ -1,10 +1,11 @@
+
 'use client';
 import { useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
-import { Star, ThumbsUp, Download, Eye, Link as LinkIcon } from 'lucide-react';
+import { notFound, usePathname } from 'next/navigation';
+import { Star, ThumbsUp, Eye, Link as LinkIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -14,10 +15,9 @@ import type { Video } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import React from 'react';
 
-export const runtime = 'edge';
-
-export default function VideoDetailPage({ params }: { params: { id: string } }) {
-  const { id } = React.use(params);
+export default function VideoDetailPage() {
+  const pathname = usePathname();
+  const id = pathname?.split('/video/')[1];
   const firestore = useFirestore();
 
   const videoRef = useMemoFirebase(() => {
@@ -45,8 +45,6 @@ export default function VideoDetailPage({ params }: { params: { id: string } }) 
                 <div className="flex flex-wrap items-center gap-4 pt-4">
                   <Skeleton className="h-10 w-24 rounded-full" />
                   <Skeleton className="h-10 w-24 rounded-full" />
-                  <Skeleton className="h-10 w-24 rounded-full" />
-                  <Skeleton className="h-10 w-24 rounded-full" />
                 </div>
                 <Separator className="my-8" />
                  <div className="space-y-4">
@@ -72,7 +70,6 @@ export default function VideoDetailPage({ params }: { params: { id: string } }) 
   const stats = [
     { icon: Star, value: video.ratings?.toFixed(1) || 'N/A', label: 'Rating', color: 'text-yellow-400 fill-yellow-400' },
     { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.reactionCount || 0), label: 'Reactions' },
-    { icon: Download, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.downloadCount || 0), label: 'Downloads' },
     { icon: Eye, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.viewCount || 0), label: 'Views' },
   ]
 

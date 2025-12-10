@@ -67,7 +67,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     return collection(firestore, `videos/${video.id}/reactions`);
   }, [firestore, video.id]);
 
-  const { data: userReaction } = useDoc<{type: 'heart' | 'fire' | 'hot-face' | 'hotFace'}>(userReactionRef);
+  const { data: userReaction } = useDoc<{type: 'heart' | 'fire' | 'hotFace'}>(userReactionRef);
   const { data: reactions } = useCollection(reactionsCollectionRef);
 
   React.useEffect(() => {
