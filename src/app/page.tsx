@@ -23,9 +23,6 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         <div className="container max-w-2xl py-8">
-          <h1 className="mb-6 font-headline text-3xl font-bold tracking-tight md:text-4xl">
-            Latest Videos
-          </h1>
           <div className="flex flex-col gap-8">
             {isLoading && Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex flex-col space-y-3">
