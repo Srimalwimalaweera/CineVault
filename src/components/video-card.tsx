@@ -80,8 +80,8 @@ export function VideoCard({ video }: VideoCardProps) {
                 />
             </div>
         </Link>
-        <div className="relative pt-2">
-            <CardContent className="p-2 text-sm text-muted-foreground">
+        <div className="relative">
+            <CardContent className="p-2 pt-4 text-sm text-muted-foreground">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1" title="Rating">
                     <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
