@@ -22,17 +22,17 @@ export default function Home() {
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1">
-        <div className="container py-8">
+        <div className="container max-w-2xl py-8">
           <h1 className="mb-6 font-headline text-3xl font-bold tracking-tight md:text-4xl">
-            Trending Videos
+            Latest Videos
           </h1>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
-            {isLoading && Array.from({ length: 10 }).map((_, i) => (
+          <div className="flex flex-col gap-8">
+            {isLoading && Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex flex-col space-y-3">
-                <Skeleton className="aspect-[2/3] w-full rounded-xl" />
+                <Skeleton className="aspect-video w-full rounded-xl" />
                 <div className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
                 </div>
               </div>
             ))}

@@ -3,15 +3,15 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, ListPlus, Star, ThumbsUp } from 'lucide-react';
+import { Heart, ListPlus, Star, ThumbsUp, Download, Eye, MessageCircle } from 'lucide-react';
 import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase';
 
 interface VideoCardProps {
@@ -47,43 +47,56 @@ export function VideoCard({ video }: VideoCardProps) {
     });
   };
 
+  const stats = [
+    { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.reactionCount || 0) },
+    { icon: Eye, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.viewCount || 0) },
+    { icon: Download, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.downloadCount || 0) },
+  ]
+
   return (
-    <Link href={`/video/${video.id}`} className="group block outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg">
-      <Card className="h-full overflow-hidden transition-all duration-300 ease-in-out group-hover:-translate-y-1 group-hover:shadow-xl group-focus-visible:-translate-y-1 group-focus-visible:shadow-xl">
-        <div className="relative aspect-[2/3] w-full">
-          <Image 
-            src={video.thumbnailUrl} 
-            alt={video.title} 
-            fill 
-            className="object-cover transition-transform duration-300 group-hover:scale-105" 
-            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 20vw, (max-width: 1280px) 16vw, 14vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-          <div className="absolute top-2 right-2 flex flex-col gap-2">
-            <Button size="icon" className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 backdrop-blur-sm" onClick={(e) => handleInteraction(e, 'favorite')} aria-label="Add to favorites">
-              <Heart className="h-4 w-4 text-white" />
-            </Button>
-            <Button size="icon" className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 backdrop-blur-sm" onClick={(e) => handleInteraction(e, 'playlist')} aria-label="Add to playlist">
-              <ListPlus className="h-4 w-4 text-white" />
-            </Button>
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 p-3">
-             <h3 className="truncate font-headline text-base font-bold text-white shadow-black [text-shadow:0_1px_3px_var(--tw-shadow-color)]">{video.title}</h3>
-          </div>
-        </div>
-        <CardContent className="p-2 text-xs text-muted-foreground">
+      <Card className="w-full overflow-hidden transition-all duration-300 ease-in-out">
+         <CardHeader className="p-4">
+            <Link href={`/video/${video.id}`} className="group outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg">
+                <CardTitle className="font-headline text-lg group-hover:underline">{video.title}</CardTitle>
+            </Link>
+         </CardHeader>
+        <Link href={`/video/${video.id}`} className="group block outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+            <div className="relative aspect-video w-full">
+            <Image 
+                src={video.thumbnailUrl} 
+                alt={video.title} 
+                fill 
+                className="object-cover transition-transform duration-300 group-hover:scale-105" 
+                sizes="(max-width: 768px) 100vw, 50vw"
+            />
+            </div>
+        </Link>
+        <CardContent className="p-2 text-sm text-muted-foreground">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1" title="Rating">
-                <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                <span className="font-semibold">{video.ratings?.toFixed(1)}</span>
+                <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                <span className="font-semibold text-foreground">{video.ratings?.toFixed(1)}</span>
             </div>
-            <div className="flex items-center gap-1" title="Reactions">
-                <ThumbsUp className="h-3 w-3" />
-                <span>{Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.reactionCount || 0)}</span>
+            <div className="flex items-center gap-3">
+                {stats.map((stat, i) => (
+                    <div key={i} className="flex items-center gap-1">
+                        <stat.icon className="h-4 w-4" />
+                        <span>{stat.value}</span>
+                    </div>
+                ))}
             </div>
           </div>
         </CardContent>
+        <CardFooter className="grid grid-cols-2 gap-px border-t bg-muted/50 p-0">
+            <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={(e) => handleInteraction(e, 'favorite')}>
+                <Heart className="h-5 w-5 mr-2" />
+                Favorite
+            </Button>
+            <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={(e) => handleInteraction(e, 'playlist')}>
+                <ListPlus className="h-5 w-5 mr-2" />
+                Add to list
+            </Button>
+        </CardFooter>
       </Card>
-    </Link>
   );
 }
