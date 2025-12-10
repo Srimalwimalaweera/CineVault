@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Bookmark, ListPlus, Star, ThumbsUp, Eye, Heart } from 'lucide-react';
+import { Bookmark, ListPlus, Star, ThumbsUp, Eye, Heart, Play } from 'lucide-react';
 import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -39,7 +39,6 @@ const useClickDetection = (
     }, delay);
 
     return () => clearTimeout(timer);
-  // NOTE: The click handlers are wrapped in useCallback below to prevent re-renders
   }, [clickCount, onSingleClick, onDoubleClick, onTripleClick, delay]);
 
   return () => setClickCount(prev => prev + 1);
@@ -229,7 +228,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
                   </div>
               </div>
             </CardContent>
-            <CardFooter className="grid grid-cols-2 gap-px border-t bg-muted/50 p-0">
+            <CardFooter className="grid grid-cols-3 gap-px border-t bg-muted/50 p-0">
                 <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={() => handleInteraction('favorite')}>
                     <Bookmark className="h-5 w-5 mr-2" />
                     Favorite
@@ -237,6 +236,12 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
                 <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={() => handleInteraction('playlist')}>
                     <ListPlus className="h-5 w-5 mr-2" />
                     Add to list
+                </Button>
+                <Button asChild variant="ghost" className="rounded-none text-muted-foreground">
+                    <a href={video.videoUrl} target="_blank" rel="noopener noreferrer">
+                        <Play className="h-5 w-5 mr-2" />
+                        Watch now
+                    </a>
                 </Button>
             </CardFooter>
             <div 
