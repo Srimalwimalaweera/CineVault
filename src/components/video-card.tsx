@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Bookmark, ListPlus, Star, ThumbsUp, Download, Eye, Heart } from 'lucide-react';
 import type { Video } from '@/lib/types';
 import * as React from 'react';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, serverTimestamp, doc } from 'firebase/firestore';
 import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
 import Lottie from "lottie-react";
@@ -59,7 +59,13 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     return doc(firestore, `videos/${video.id}/reactions`, user.uid);
   }, [firestore, user, video.id]);
 
+  const reactionsCollectionRef = useMemoFirebase(() => {
+    if (!firestore || !video.id) return null;
+    return collection(firestore, `videos/${video.id}/reactions`);
+  }, [firestore, video.id]);
+
   const { data: userReaction } = useDoc<{type: 'heart' | 'fire' | 'hotFace'}>(userReactionRef);
+  const { data: reactions } = useCollection(reactionsCollectionRef);
 
   React.useEffect(() => {
     const fetchAnimations = async () => {
@@ -157,7 +163,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   };
 
   const stats = [
-    { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.reactionCount || 0) },
+    { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(reactions?.length || 0) },
     { icon: Eye, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.viewCount || 0) },
     { icon: Download, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.downloadCount || 0) },
   ];
