@@ -60,6 +60,11 @@
           "type": "string",
           "description": "The timestamp when the video was moved to the trash.",
           "format": "date-time"
+        },
+        "accessLevel": {
+          "type": "string",
+          "description": "The access level for the video, e.g., 'free' or 'pro'.",
+          "enum": ["free", "pro"]
         }
       },
       "required": [
@@ -72,7 +77,8 @@
         "reactionCount",
         "downloadCount",
         "viewCount",
-        "createdAt"
+        "createdAt",
+        "accessLevel"
       ]
     },
     "User": {

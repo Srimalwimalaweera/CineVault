@@ -31,12 +31,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters long."),
   description: z.string().min(10, "Description must be at least 10 characters long."),
   videoUrl: z.string().url("Please enter a valid URL."),
   thumbnailUrl: z.string().url("Please enter a valid thumbnail URL."),
+  accessLevel: z.enum(["free", "pro"]),
 });
 
 export function AdminUploadDialog() {
@@ -51,6 +53,7 @@ export function AdminUploadDialog() {
       description: "",
       videoUrl: "",
       thumbnailUrl: "",
+      accessLevel: "free",
     },
   });
   
@@ -76,10 +79,7 @@ export function AdminUploadDialog() {
 
     try {
         const newVideo = {
-            title: values.title,
-            description: values.description,
-            videoUrl: values.videoUrl,
-            thumbnailUrl: values.thumbnailUrl,
+            ...values,
             ratings: 0,
             reactionCount: 0,
             downloadCount: 0,
@@ -188,6 +188,36 @@ export function AdminUploadDialog() {
                         <Clipboard className="h-4 w-4" />
                     </Button>
                   </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="accessLevel"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Access Level</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex space-x-4"
+                    >
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <RadioGroupItem value="free" id="r1" />
+                        </FormControl>
+                        <FormLabel htmlFor="r1" className="font-normal">Free</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <RadioGroupItem value="pro" id="r2" />
+                        </FormControl>
+                        <FormLabel htmlFor="r2" className="font-normal">Pro</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

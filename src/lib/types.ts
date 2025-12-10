@@ -13,6 +13,7 @@ export type Video = {
   createdAt: any; // Firestore Timestamp
   status?: 'published' | 'trashed';
   trashedAt?: any; // Firestore Timestamp
+  accessLevel?: 'free' | 'pro';
 };
 
 export type Rating = {
