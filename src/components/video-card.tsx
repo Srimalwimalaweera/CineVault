@@ -32,14 +32,14 @@ const useClickDetection = (
     if (clickCount === 0) return;
 
     const timer = setTimeout(() => {
-      if (clickCount === 1) {
-        onSingleClick();
-      } else if (clickCount === 2) {
-        onDoubleClick();
-      } else if (clickCount >= 3) {
-        onTripleClick();
-      }
-      setClickCount(0);
+        if (clickCount === 1) {
+            onSingleClick();
+        } else if (clickCount === 2) {
+            onDoubleClick();
+        } else if (clickCount === 3) {
+            onTripleClick();
+        }
+        setClickCount(0);
     }, delay);
 
     return () => clearTimeout(timer);
@@ -267,7 +267,6 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     if (reactionType && animations[reactionType]) {
         return <Lottie animationData={animations[reactionType]} loop={true} className="h-6 w-6" />;
     }
-    // If no reaction, show a static, outlined heart
     return <Heart className="h-6 w-6 text-white" />;
   };
 
