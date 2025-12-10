@@ -27,23 +27,32 @@ const useClickDetection = (
   delay = 250
 ) => {
   const [clickCount, setClickCount] = React.useState(0);
+  const clickTimer = React.useRef<NodeJS.Timeout | null>(null);
 
   React.useEffect(() => {
-    const handler = setTimeout(() => {
-      if (clickCount === 1) onSingleClick();
-      else if (clickCount === 2) onDoubleClick();
-      else if (clickCount >= 3) onTripleClick();
-      setClickCount(0);
-    }, delay);
+    return () => {
+      if (clickTimer.current) {
+        clearTimeout(clickTimer.current);
+      }
+    };
+  }, []);
 
-    if (clickCount === 0) {
-      clearTimeout(handler);
+  const handleClick = () => {
+    setClickCount((prev) => prev + 1);
+
+    if (clickTimer.current) {
+      clearTimeout(clickTimer.current);
     }
 
-    return () => clearTimeout(handler);
-  }, [clickCount, delay, onSingleClick, onDoubleClick, onTripleClick]);
-
-  return () => setClickCount(prev => prev + 1);
+    clickTimer.current = setTimeout(() => {
+      if (clickCount === 0) onSingleClick(); // 1st click
+      else if (clickCount === 1) onDoubleClick(); // 2nd click
+      else if (clickCount >= 2) onTripleClick(); // 3rd click
+      setClickCount(0);
+    }, delay);
+  };
+  
+  return handleClick
 };
 
 
@@ -76,13 +85,20 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     if (!firestore || !user || !video.id) return null;
     return doc(firestore, `videos/${video.id}/ratings`, user.uid);
   }, [firestore, user, video.id]);
+  
+  const favoriteRef = useMemoFirebase(() => {
+    if (!firestore || !user || !video.id) return null;
+    return doc(firestore, `users/${user.uid}/favorites`, video.id);
+  }, [firestore, user, video.id]);
 
 
   const { data: userReaction } = useDoc<{type: 'heart' | 'fire' | 'hot-face'}>(userReactionRef);
   const { data: reactions } = useCollection(reactionsCollectionRef);
   const { data: ratingsData } = useCollection<RatingType>(videoRatingsRef);
   const { data: userRating } = useDoc<RatingType>(userRatingRef);
+  const { data: favorite } = useDoc(favoriteRef);
 
+  const isFavorited = !!favorite;
 
   const averageRating = React.useMemo(() => {
     if (!ratingsData || ratingsData.length === 0) {
@@ -140,12 +156,21 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
 
     if (type === 'favorite') {
         const favRef = doc(firestore, `users/${user.uid}/favorites`, video.id);
-        const favData = { videoId: video.id, userId: user.uid, createdAt: serverTimestamp() };
-        setDocumentNonBlocking(favRef, favData, { merge: true });
-        toast({ 
-            title: "Added to Favorites",
-            description: `"${video.title}" has been added.`
-        });
+        if (isFavorited) {
+          deleteDocumentNonBlocking(favRef);
+          toast({
+            title: "Removed from Favorites",
+            description: `"${video.title}" has been removed.`,
+            variant: "destructive"
+          });
+        } else {
+          const favData = { videoId: video.id, userId: user.uid, createdAt: serverTimestamp() };
+          setDocumentNonBlocking(favRef, favData, { merge: true });
+          toast({ 
+              title: "Added to Favorites",
+              description: `"${video.title}" has been added.`
+          });
+        }
         return;
     }
     
@@ -175,7 +200,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         });
     }
 
-  }, [user, firestore, video.id, video.title, toast]);
+  }, [user, firestore, video.id, video.title, toast, isFavorited]);
 
     const handleWatchNowClick = React.useCallback(async (e: React.MouseEvent<HTMLAnchorElement>) => {
         if (!firestore) return;
@@ -309,7 +334,14 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
               </div>
             </CardContent>
             <CardFooter className="grid grid-cols-3 gap-px border-t bg-muted/50 p-0">
-                <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={() => handleInteraction('favorite')}>
+                <Button 
+                    variant="ghost" 
+                    className={cn(
+                        "rounded-none text-muted-foreground",
+                        isFavorited && "bg-accent text-accent-foreground hover:bg-accent/90"
+                    )}
+                    onClick={() => handleInteraction('favorite')}
+                >
                     <Bookmark className="h-5 w-5 mr-2" />
                     Favorite
                 </Button>
@@ -376,3 +408,5 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       </>
   );
 }
+
+  
