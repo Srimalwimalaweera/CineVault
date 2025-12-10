@@ -26,8 +26,8 @@ export async function initiateEmailSignUp(authInstance: Auth, email: string, pas
 }
 
 /** Initiate email/password sign-in (non-blocking). */
-export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  signInWithEmailAndPassword(authInstance, email, password);
+export function initiateEmailSignIn(authInstance: Auth, email: string, password: string) {
+  return signInWithEmailAndPassword(authInstance, email, password);
 }
 
 /** Initiate Google sign-in and return user credential. */

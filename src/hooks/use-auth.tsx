@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, ReactNode, useCallback, useState, useEffect } from 'react';
-import { useUser, useAuth, useFirestore, useMemoFirebase } from '@/firebase/provider';
+import { useUser, useAuth, useFirestore, useMemoFirebase } from '@/firebase';
 import { useDoc } from '@/firebase';
 import type { User } from 'firebase/auth';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const createUserProfile = useCallback(async (user: User) => {
     if (!firestore || !user) return;
     const userRef = doc(firestore, "users", user.uid);
-    const userProfile = {
+    const userProfileData = {
       displayName: user.displayName || user.email?.split('@')[0],
       email: user.email,
       photoURL: user.photoURL,
@@ -53,16 +53,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       createdAt: serverTimestamp(),
     };
     // Use non-blocking write
-    setDocumentNonBlocking(userRef, userProfile, { merge: true });
+    setDocumentNonBlocking(userRef, userProfileData, { merge: true });
   }, [firestore]);
 
 
-  const login = useCallback((email: string, password: string) => {
-    initiateEmailSignIn(auth, email, password);
-    toast({
-      title: "Login Successful",
-      description: "Welcome back to CineVault!",
-    });
+  const login = useCallback(async (email: string, password: string) => {
+    try {
+      await initiateEmailSignIn(auth, email, password);
+      toast({
+        title: "Login Successful",
+        description: "Welcome back to CineVault!",
+      });
+    } catch (error: any) {
+      console.error("Login Error:", error);
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: "Invalid email or password. Please try again.",
+      });
+    }
   }, [auth, toast]);
 
   const signup = useCallback(async (email: string, password: string) => {
