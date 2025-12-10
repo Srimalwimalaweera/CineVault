@@ -109,6 +109,10 @@ export default {
           '0%, 100%': { backgroundPosition: '200% center' },
           '50%': { backgroundPosition: '-200% center' },
         },
+        'shimmer-gold-nav': {
+          '0%, 100%': { backgroundPosition: '200% center' },
+          '50%': { backgroundPosition: '-200% center' },
+        },
         'particle-flow': {
           '0%': { transform: 'translateY(100%)' },
           '100%': { transform: 'translateY(-100%)' },
@@ -125,6 +129,7 @@ export default {
         'shimmer': 'shimmer 4s linear infinite',
         'shimmer-gold': 'shimmer-gold 3s linear infinite',
         'shimmer-brand': 'shimmer-brand 8s linear infinite',
+        'shimmer-gold-nav': 'shimmer-gold-nav 2s linear infinite',
         'particle-flow': 'particle-flow 10s linear infinite',
         'heart-pop': 'heart-pop 1.5s cubic-bezier(0.21, 1.2, 0.81, 1) forwards',
       },
