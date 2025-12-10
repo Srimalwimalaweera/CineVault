@@ -126,15 +126,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userCredential = await initiateGoogleSignIn(auth);
       if (userCredential && userCredential.user) {
         await createUserProfile(userCredential.user);
+        toast({
+          title: "Signed in with Google",
+          description: "Welcome to XVault!",
+        });
       }
-      toast({
-        title: "Signed in with Google",
-        description: "Welcome to XVault!",
-      });
+      // If userCredential is undefined (because the user closed the popup),
+      // we simply do nothing.
     } catch (error: any) {
-      if (error.code === 'auth/popup-closed-by-user') {
-        return;
-      }
+      // This will now only catch other errors, as popup-closed is handled in initiateGoogleSignIn
       console.error("Google Sign-In Error:", error);
       toast({
         variant: "destructive",

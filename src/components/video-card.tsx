@@ -16,6 +16,7 @@ import { addDocumentNonBlocking } from '@/firebase';
 
 interface VideoCardProps {
   video: Video;
+  priority?: boolean;
 }
 
 const useClickDetection = (
@@ -47,7 +48,7 @@ const useClickDetection = (
 };
 
 
-export function VideoCard({ video }: VideoCardProps) {
+export function VideoCard({ video, priority = false }: VideoCardProps) {
   const { user } = useAuthContext();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -116,6 +117,7 @@ export function VideoCard({ video }: VideoCardProps) {
                     alt={video.title} 
                     width={1080}
                     height={1080}
+                    priority={priority}
                     className="object-contain h-full w-full transition-transform duration-300 group-hover:scale-105" 
                 />
             </div>

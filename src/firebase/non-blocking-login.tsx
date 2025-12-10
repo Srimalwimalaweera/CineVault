@@ -36,7 +36,12 @@ export async function initiateGoogleSignIn(authInstance: Auth): Promise<UserCred
   try {
     const userCredential = await signInWithPopup(authInstance, provider);
     return userCredential;
-  } catch (error) {
+  } catch (error: any) {
+    // Gracefully handle the user closing the popup.
+    if (error.code === 'auth/popup-closed-by-user') {
+      return undefined;
+    }
+    // For all other errors, re-throw them to be handled by the caller.
     console.error("Error during Google sign-in:", error);
     throw error;
   }

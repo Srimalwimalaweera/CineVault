@@ -33,8 +33,12 @@ export default function Home() {
                 </div>
               </div>
             ))}
-            {videos?.map((video) => (
-              <VideoCard key={video.id} video={video} />
+            {videos?.map((video, index) => (
+              <VideoCard 
+                key={video.id} 
+                video={video} 
+                priority={index < 2}
+              />
             ))}
           </div>
         </div>
