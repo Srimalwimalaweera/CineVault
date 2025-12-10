@@ -8,7 +8,7 @@ import type { User } from 'firebase/auth';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 import { signOut } from 'firebase/auth';
 import { useToast } from './use-toast';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc, getDoc } from 'firebase/firestore'; // Added getDoc
 import { setDocumentNonBlocking } from '@/firebase';
 
 type UserProfile = {
@@ -45,27 +45,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const createUserProfile = useCallback(async (user: User) => {
     if (!firestore || !user) return;
     const userRef = doc(firestore, "users", user.uid);
-    const userProfileData = {
-      displayName: user.displayName || user.email?.split('@')[0],
-      email: user.email,
-      photoURL: user.photoURL,
-      role: 'user',
-      createdAt: serverTimestamp(),
-    };
-    // Use non-blocking write
-    setDocumentNonBlocking(userRef, userProfileData, { merge: true });
+
+    // 1. Check if the user document already exists
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      // If user exists, don't send the role (to preserve admin status)
+      const userProfileData = {
+        displayName: user.displayName || user.email?.split('@')[0],
+        email: user.email,
+        photoURL: user.photoURL,
+        lastSeen: serverTimestamp(), // Good idea to track last login
+      };
+      setDocumentNonBlocking(userRef, userProfileData, { merge: true });
+    } else {
+      // For a new user, set the role to 'user'
+      const userProfileData = {
+        displayName: user.displayName || user.email?.split('@')[0],
+        email: user.email,
+        photoURL: user.photoURL,
+        role: 'user', // Only for new users
+        createdAt: serverTimestamp(),
+      };
+      setDocumentNonBlocking(userRef, userProfileData, { merge: true });
+    }
   }, [firestore]);
 
 
   const login = useCallback(async (email: string, password: string) => {
     try {
-      await initiateEmailSignIn(auth, email, password);
+      const userCredential = await initiateEmailSignIn(auth, email, password);
+      if (userCredential && userCredential.user) {
+        await createUserProfile(userCredential.user);
+      }
       toast({
         title: "Login Successful",
         description: "Welcome back to CineVault!",
       });
     } catch (error: any) {
-      // This error is expected on bad password, so we just show a toast.
       if (error.code === 'auth/invalid-credential') {
         toast({
           variant: "destructive",
@@ -73,7 +90,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           description: "Invalid email or password. Please try again.",
         });
       } else {
-        // For other unexpected errors, log them and show a generic message.
         console.error("Login Error:", error);
         toast({
           variant: "destructive",
@@ -82,7 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     }
-  }, [auth, toast]);
+  }, [auth, toast, createUserProfile]);
 
   const signup = useCallback(async (email: string, password: string) => {
     try {
@@ -117,7 +133,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
     } catch (error: any) {
       if (error.code === 'auth/popup-closed-by-user') {
-        // This is a common case, so we can handle it gracefully.
         return;
       }
       console.error("Google Sign-In Error:", error);
