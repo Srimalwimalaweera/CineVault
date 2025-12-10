@@ -26,29 +26,24 @@ const useClickDetection = (
   onTripleClick: () => void,
   delay = 250
 ) => {
-  const clickTimeout = React.useRef<NodeJS.Timeout | null>(null);
-  let clickCount = 0;
+  const [clickCount, setClickCount] = React.useState(0);
 
-  const handleClick = () => {
-    clickCount++;
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      if (clickCount === 1) onSingleClick();
+      else if (clickCount === 2) onDoubleClick();
+      else if (clickCount >= 3) onTripleClick();
+      setClickCount(0);
+    }, delay);
 
-    if (clickTimeout.current) {
-      clearTimeout(clickTimeout.current);
+    if (clickCount === 0) {
+      clearTimeout(handler);
     }
 
-    clickTimeout.current = setTimeout(() => {
-      if (clickCount === 1) {
-        onSingleClick();
-      } else if (clickCount === 2) {
-        onDoubleClick();
-      } else if (clickCount >= 3) {
-        onTripleClick();
-      }
-      clickCount = 0;
-    }, delay);
-  };
+    return () => clearTimeout(handler);
+  }, [clickCount, delay, onSingleClick, onDoubleClick, onTripleClick]);
 
-  return handleClick;
+  return () => setClickCount(prev => prev + 1);
 };
 
 
@@ -247,7 +242,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       e.stopPropagation();
       if (showReactions) {
           setShowReactions(false);
-      } else if (!pressTimer.current) { 
+      } else { 
           handleClicks();
       }
   };
