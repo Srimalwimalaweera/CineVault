@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Bookmark, ListPlus, Star, ThumbsUp, Eye, Heart, Play } from 'lucide-react';
+import { Bookmark, ListPlus, Star, ThumbsUp, Eye, Heart, Play, Download } from 'lucide-react';
 import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -56,6 +56,22 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const [showReactions, setShowReactions] = React.useState(false);
   const [animations, setAnimations] = React.useState<{ heart: any; fire: any; hotFace: any; star: any; }>({ heart: null, fire: null, hotFace: null, star: null });
   const pressTimer = React.useRef<NodeJS.Timeout | null>(null);
+  const starLottieRef = React.useRef<any>(null);
+
+  React.useEffect(() => {
+    if (!animations.star || !starLottieRef.current) return;
+
+    const playAnimation = () => {
+      starLottieRef.current?.stop();
+      starLottieRef.current?.play();
+    };
+
+    const interval = setInterval(playAnimation, 2500);
+    playAnimation(); // Play once on mount
+
+    return () => clearInterval(interval);
+  }, [animations.star]);
+
 
   const userReactionRef = useMemoFirebase(() => {
     if (!firestore || !user || !video.id) return null;
@@ -181,6 +197,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
 
   const stats = [
     { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(reactions?.length || 0) },
+    { icon: Download, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.downloadCount || 0) },
     { icon: Eye, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.viewCount || 0) },
   ];
   
@@ -221,7 +238,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
              <CardContent className="p-2 pt-4 text-sm text-muted-foreground">
               <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1" title="Rating">
-                      {animations.star ? <Lottie animationData={animations.star} loop={true} speed={0.4} className="h-4 w-4" /> : <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
+                      {animations.star ? <Lottie lottieRef={starLottieRef} animationData={animations.star} loop={false} autoplay={false} className="h-4 w-4" /> : <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
                       <span className="font-semibold text-foreground">{video.ratings?.toFixed(1)}</span>
                   </div>
                   <div className="flex items-center gap-3">
