@@ -342,6 +342,11 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         isOpen={isLightboxOpen} 
         onOpenChange={setIsLightboxOpen}
         video={video}
+        animations={animations}
+        averageRating={averageRating}
+        userRating={userRating?.rating || 0}
+        stats={stats}
+        handleInteraction={handleInteraction}
       />
       </>
   );
