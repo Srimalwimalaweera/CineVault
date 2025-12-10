@@ -77,12 +77,12 @@ service cloud.firestore {
       allow write: if isDbAdmin();
       
       /**
-       * @description User reactions to a video.
+       * @description User reactions to a video. Rules for the subcollection.
        * @path /videos/{videoId}/reactions/{reactionId}
        */
       match /reactions/{reactionId} {
         allow read: if true;
-        // Allow any signed-in user to create a reaction if they are the owner.
+        // Allow any signed-in user to create a reaction if the data's userId matches their own.
         allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
         // Allow the owner of a reaction to update or delete it.
         allow update, delete: if isOwner(resource.data.userId);
