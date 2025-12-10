@@ -65,7 +65,8 @@ service cloud.firestore {
      * Validates that a user is not attempting to change their role.
      */
     function isRoleImmutable() {
-      return request.resource.data.role == resource.data.role;
+      // Allow role to be set on creation, but not changed on update.
+      return !exists(path) || request.resource.data.role == resource.data.role;
     }
 
     /**
@@ -95,8 +96,12 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow read: if isOwner(userId) || isDbAdmin();
-      allow create: if isOwner(userId) && isRoleUserOnCreate();
-      allow update: if isOwner(userId) && isRoleImmutable();
+      // Allow create and update if user is owner and not escalating role.
+      // On create, role must be 'user'. On update, role must be unchanged.
+      allow write: if isOwner(userId) && (
+        (isRoleUserOnCreate() && !exists(path)) || 
+        (isRoleImmutable() && exists(path))
+      );
       // Deleting user profiles is disabled to maintain data integrity.
       allow delete: if false;
     }
