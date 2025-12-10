@@ -45,6 +45,11 @@
         "viewCount": {
           "type": "number",
           "description": "Number of times the video has been viewed."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the video was created.",
+          "format": "date-time"
         }
       },
       "required": [
@@ -56,7 +61,8 @@
         "ratings",
         "reactionCount",
         "downloadCount",
-        "viewCount"
+        "viewCount",
+        "createdAt"
       ]
     },
     "User": {

@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UploadCloud, PlusSquare, Clipboard } from "lucide-react";
 import { useFirestore } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, serverTimestamp } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase";
 
 import { Button } from "@/components/ui/button";
@@ -84,6 +84,7 @@ export function AdminUploadDialog() {
             reactionCount: 0,
             downloadCount: 0,
             viewCount: 0,
+            createdAt: serverTimestamp(),
         };
         
         addDocumentNonBlocking(videosCollection, newVideo);

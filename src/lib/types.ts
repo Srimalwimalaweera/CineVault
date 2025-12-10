@@ -10,6 +10,7 @@ export type Video = {
   reactionCount?: number;
   downloadCount?: number;
   viewCount?: number;
+  createdAt: any; // Firestore Timestamp
 };
 
 export type Rating = {
