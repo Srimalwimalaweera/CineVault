@@ -3,61 +3,72 @@
 
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { VideoCard } from '@/components/video-card';
-import { useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
-import { Skeleton } from '@/components/ui/skeleton';
-import type { Video } from '@/lib/types';
-import { Crown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Crown, Zap, Video, Star, BadgeCheck } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+
+const proFeatures = [
+  {
+    icon: Crown,
+    title: 'Exclusive Content',
+    description: 'Access a library of members-only videos and series.',
+  },
+  {
+    icon: Zap,
+    title: 'Ad-Free Experience',
+    description: 'Enjoy uninterrupted viewing without any advertisements.',
+  },
+  {
+    icon: Video,
+    title: 'Early Access',
+    description: 'Watch new releases and premieres before anyone else.',
+  },
+  {
+    icon: Star,
+    title: 'High-Quality Streaming',
+    description: 'Stream all content in stunning 4K resolution.',
+  },
+];
+
 
 export default function ProPage() {
-  const firestore = useFirestore();
-
-  const videosQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(
-        collection(firestore, 'videos'), 
-        where('status', '==', 'published'),
-        where('accessLevel', '==', 'pro'),
-        orderBy('createdAt', 'desc')
-    );
-  }, [firestore]);
-
-  const { data: videos, isLoading } = useCollection<Video>(videosQuery);
-
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1">
-        <div className="container max-w-2xl py-8">
-            <div className="mb-8 flex items-center gap-4">
-                <h1 className="font-headline text-3xl font-bold flex items-center gap-2">
-                    <Crown className="text-gold" /> Pro Videos
-                </h1>
+      <main className="flex-1 bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white">
+        <div className="container max-w-2xl py-12 text-center">
+            <div className="mb-8 inline-block rounded-full bg-gold/10 p-4 border border-gold/30">
+              <Crown className="h-12 w-12 text-gold animate-shimmer-gold bg-gradient-to-r from-gold via-yellow-200 to-gold bg-[length:200%_100%] bg-clip-text text-transparent" />
+          </div>
+          <h1 className="font-headline text-4xl font-bold tracking-tight sm:text-5xl">
+            Unlock XVault Pro
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-white/70">
+            Upgrade your experience and get access to all premium features.
+          </p>
+
+           <div className="mt-12 text-left">
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+              {proFeatures.map((feature) => (
+                <div key={feature.title} className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gold/10">
+                    <feature.icon className="h-6 w-6 text-gold" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold leading-6 text-white">{feature.title}</h3>
+                    <p className="mt-1 text-base leading-6 text-white/60">{feature.description}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          <div className="flex flex-col gap-8">
-            {isLoading && Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex flex-col space-y-3">
-                <Skeleton className="aspect-video w-full rounded-xl" />
-                <div className="space-y-2">
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-              </div>
-            ))}
-            {videos?.map((video, index) => (
-              <VideoCard 
-                key={video.id} 
-                video={video} 
-                priority={index < 2}
-              />
-            ))}
-            {!isLoading && videos?.length === 0 && (
-                <div className="text-center text-muted-foreground py-12">
-                    <p>No pro videos found. Check back later!</p>
-                </div>
-            )}
+          </div>
+          
+          <div className='mt-12'>
+            <Button size="lg" className="w-full max-w-xs font-bold text-lg py-7 bg-gold text-black hover:bg-gold/90 animate-shimmer-gold bg-gradient-to-r from-gold via-yellow-100 to-gold bg-[length:200%_100%]">
+                <BadgeCheck className="mr-2 h-6 w-6" />
+                Upgrade Now
+            </Button>
+            <p className="mt-4 text-xs text-white/50">* Pro plan features are for demonstration purposes only.</p>
           </div>
         </div>
       </main>
@@ -65,3 +76,4 @@ export default function ProPage() {
     </div>
   );
 }
+
