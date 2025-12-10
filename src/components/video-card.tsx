@@ -53,7 +53,7 @@ export function VideoCard({ video, priority = false }: VideoCardProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
 
-  const handleInteraction = (type: 'favorite' | 'playlist' | 'reaction', reactionType?: 'heart' | 'fire' | 'hot-face') => {
+  const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction', reactionType?: 'heart' | 'fire' | 'hot-face') => {
     
     if (!user || !firestore) {
       toast({ title: "Login Required", description: `Please log in to interact.`, variant: "destructive" });
@@ -89,13 +89,13 @@ export function VideoCard({ video, priority = false }: VideoCardProps) {
         title: type === 'favorite' ? "Added to Favorites" : "Added to Playlist",
         description: `"${video.title}" has been added.`
     });
-  };
+  }, [user, firestore, video.id, video.title, toast]);
 
-  const handleClicks = useClickDetection(
-    () => handleInteraction('reaction', 'heart'),
-    () => handleInteraction('reaction', 'fire'),
-    () => handleInteraction('reaction', 'hot-face')
-  );
+  const onSingleClick = React.useCallback(() => handleInteraction('reaction', 'heart'), [handleInteraction]);
+  const onDoubleClick = React.useCallback(() => handleInteraction('reaction', 'fire'), [handleInteraction]);
+  const onTripleClick = React.useCallback(() => handleInteraction('reaction', 'hot-face'), [handleInteraction]);
+
+  const handleClicks = useClickDetection(onSingleClick, onDoubleClick, onTripleClick);
 
   const stats = [
     { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.reactionCount || 0) },
@@ -170,5 +170,3 @@ export function VideoCard({ video, priority = false }: VideoCardProps) {
       </Card>
   );
 }
-
-    
