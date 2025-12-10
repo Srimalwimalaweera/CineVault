@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Crown, Zap, Video, Star, BadgeCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import Link from 'next/link';
 
 const proFeatures = [
   {
@@ -59,9 +60,11 @@ export default function ProPage() {
           </div>
           
           <div className='mt-12'>
-            <Button size="lg" className="w-full max-w-xs font-bold text-lg py-7 bg-gold text-black hover:bg-gold/90 animate-shimmer-gold bg-gradient-to-r from-gold via-yellow-100 to-gold bg-[length:200%_100%]">
-                <BadgeCheck className="mr-2 h-6 w-6" />
-                Upgrade Now
+            <Button size="lg" asChild className="w-full max-w-xs font-bold text-lg py-7 bg-gold text-black hover:bg-gold/90 animate-shimmer-gold bg-gradient-to-r from-gold via-yellow-100 to-gold bg-[length:200%_100%]">
+                <Link href="/sample">
+                    <BadgeCheck className="mr-2 h-6 w-6" />
+                    Upgrade Now
+                </Link>
             </Button>
             <p className="mt-4 text-xs text-white/50">* Pro plan features are for demonstration purposes only.</p>
           </div>
