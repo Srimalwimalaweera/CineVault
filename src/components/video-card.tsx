@@ -108,10 +108,13 @@ export function VideoCard({ video }: VideoCardProps) {
                 </Button>
             </CardFooter>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                <Button size="icon" className="rounded-full h-12 w-12 shadow-lg" onClick={(e) => handleInteraction(e, 'reaction')}>
-                    <Heart className="h-6 w-6" />
-                    <span className="sr-only">Add reaction</span>
-                </Button>
+                <div className="flex flex-col items-center gap-1">
+                    <Button size="icon" className="rounded-full h-12 w-12 shadow-lg" onClick={(e) => handleInteraction(e, 'reaction')}>
+                        <Heart className="h-6 w-6" />
+                        <span className="sr-only">Add reaction</span>
+                    </Button>
+                    <span className="text-xs font-medium text-muted-foreground">Reaction</span>
+                </div>
             </div>
         </div>
       </Card>
