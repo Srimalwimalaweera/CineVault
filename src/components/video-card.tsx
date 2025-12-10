@@ -12,7 +12,7 @@ import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, serverTimestamp, doc } from 'firebase/firestore';
-import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import Lottie from "lottie-react";
 
 // Hook to detect single/double/triple clicks
@@ -133,7 +133,21 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     }
   }, [user, firestore, video.id, video.title, toast]);
 
-  const onSingleClick = React.useCallback(() => handleInteraction('reaction', 'heart'), [handleInteraction]);
+  const onSingleClick = React.useCallback(() => {
+    if (userReaction) {
+      // If a reaction exists, remove it.
+      if (userReactionRef) {
+        deleteDocumentNonBlocking(userReactionRef);
+        toast({
+          title: "Reaction Removed",
+        });
+      }
+    } else {
+      // If no reaction, add a heart reaction.
+      handleInteraction('reaction', 'heart');
+    }
+  }, [userReaction, userReactionRef, handleInteraction, toast]);
+
   const onDoubleClick = React.useCallback(() => handleInteraction('reaction', 'fire'), [handleInteraction]);
   const onTripleClick = React.useCallback(() => handleInteraction('reaction', 'hotFace'), [handleInteraction]);
 
@@ -263,3 +277,5 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       </Card>
   );
 }
+
+    
