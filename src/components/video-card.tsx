@@ -313,7 +313,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
          <CardHeader className={cn("p-4", "bg-black")}>
             <Link href={`/video/${video.id}`} className="group outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg">
                 <CardTitle className={cn(
-                    "font-headline text-xl group-hover:underline",
+                    "font-headline text-xl group-hover:underline text-primary-foreground",
                     video.accessLevel === 'pro' && "text-gold animate-shimmer-gold bg-gradient-to-r from-gold via-yellow-200 to-gold bg-[length:200%_100%] bg-clip-text text-transparent"
                 )}>
                     {video.title}
@@ -458,5 +458,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       </>
   );
 }
+
+    
 
     
