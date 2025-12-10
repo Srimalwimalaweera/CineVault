@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Bookmark, ListPlus, ThumbsUp, Play, Download } from 'lucide-react';
+import { Bookmark, ListPlus, ThumbsUp, Play, Download, Heart } from 'lucide-react';
 import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -267,7 +267,8 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     if (reactionType && animations[reactionType]) {
         return <Lottie animationData={animations[reactionType]} loop={true} className="h-6 w-6" />;
     }
-    return <Lottie animationData={animations.heart} loop={true} className="h-6 w-6" />;
+    // If no reaction, show a static, outlined heart
+    return <Heart className="h-6 w-6 text-white" />;
   };
 
   return (
