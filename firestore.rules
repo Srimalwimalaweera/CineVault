@@ -16,6 +16,7 @@
  *
  * Data Structure:
  * - /videos/{videoId}: Public video metadata.
+ * - /videos/{videoId}/reactions/{reactionId}: User reactions to a video.
  * - /users/{userId}: Public user profiles.
  * - /users/{userId}/favorites/{favoriteId}: A user's private list of favorites.
  * - /users/{userId}/playlists/{playlistId}: A user's private video playlists.
@@ -83,6 +84,17 @@ service cloud.firestore {
     match /videos/{videoId} {
       allow read: if true;
       allow write: if isDbAdmin();
+      
+      /**
+       * @description User reactions to a video.
+       * @path /videos/{videoId}/reactions/{reactionId}
+       */
+      match /reactions/{reactionId} {
+        allow read: if true;
+        // Allow create if user is signed in and the reaction userId matches their own.
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if false; // Reactions are immutable.
+      }
     }
 
     /**
@@ -115,3 +127,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

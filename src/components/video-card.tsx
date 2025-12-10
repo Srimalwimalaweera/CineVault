@@ -11,63 +11,67 @@ import { Bookmark, ListPlus, Star, ThumbsUp, Download, Eye, Heart } from 'lucide
 import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, serverTimestamp } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase';
-import { cn } from '@/lib/utils';
-import Lottie from 'lottie-react';
 
 interface VideoCardProps {
   video: Video;
 }
 
-const reactionEmojis = [
-    { name: 'Fire', src: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/lottie.json', position: 'transform -translate-x-12 -translate-y-4' },
-    { name: 'Heart', src: 'https://fonts.gstatic.com/s/e/notoemoji/latest/2764_fe0f/lottie.json', position: 'transform -translate-y-12' },
-    { name: 'Hot', src: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f975/lottie.json', position: 'transform translate-x-12 -translate-y-4' },
-];
+const useClickDetection = (
+  onSingleClick: () => void,
+  onDoubleClick: () => void,
+  onTripleClick: () => void,
+  delay = 250
+) => {
+  const [clickCount, setClickCount] = React.useState(0);
+
+  React.useEffect(() => {
+    if (clickCount === 0) return;
+
+    const timer = setTimeout(() => {
+      if (clickCount === 1) {
+        onSingleClick();
+      } else if (clickCount === 2) {
+        onDoubleClick();
+      } else if (clickCount >= 3) {
+        onTripleClick();
+      }
+      setClickCount(0);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [clickCount, onSingleClick, onDoubleClick, onTripleClick, delay]);
+
+  return () => setClickCount(prev => prev + 1);
+};
+
 
 export function VideoCard({ video }: VideoCardProps) {
   const { user } = useAuthContext();
   const { toast } = useToast();
   const firestore = useFirestore();
-  const [showReactions, setShowReactions] = React.useState(false);
-  const longPressTimer = React.useRef<NodeJS.Timeout>();
 
-  const [animations, setAnimations] = React.useState<Record<string, any>>({});
-
-  React.useEffect(() => {
-    const fetchAnimations = async () => {
-        const fetchedAnimations: Record<string, any> = {};
-        for (const emoji of reactionEmojis) {
-            try {
-                const response = await fetch(emoji.src);
-                const data = await response.json();
-                fetchedAnimations[emoji.name] = data;
-            } catch (error) {
-                console.error(`Failed to fetch animation for ${emoji.name}`, error);
-            }
-        }
-        setAnimations(fetchedAnimations);
-    };
-
-    fetchAnimations();
-  }, []);
-
-  const handleInteraction = (e: React.MouseEvent, type: 'favorite' | 'playlist' | 'reaction', reactionType?: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-
+  const handleInteraction = (type: 'favorite' | 'playlist' | 'reaction', reactionType?: 'heart' | 'fire' | 'hot-face') => {
+    
     if (!user || !firestore) {
       toast({ title: "Login Required", description: `Please log in to interact.`, variant: "destructive" });
       return;
     }
     
     if (type === 'reaction') {
+        const reactionsCollection = collection(firestore, `videos/${video.id}/reactions`);
+        const newReaction = {
+            userId: user.uid,
+            videoId: video.id,
+            type: reactionType,
+            createdAt: serverTimestamp(),
+        };
+        addDocumentNonBlocking(reactionsCollection, newReaction);
         toast({ 
             title: "Reaction Added!",
-            description: `You reacted with ${reactionType || 'love'} to "${video.title}".`
+            description: `You reacted with ${reactionType} to "${video.title}".`
         });
-        setShowReactions(false);
         return;
     }
 
@@ -86,23 +90,11 @@ export function VideoCard({ video }: VideoCardProps) {
     });
   };
 
-  const handlePressStart = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    clearTimeout(longPressTimer.current);
-    longPressTimer.current = setTimeout(() => {
-        setShowReactions(true);
-    }, 300);
-  };
-
-  const handlePressEnd = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    clearTimeout(longPressTimer.current);
-  };
-  
-  const handleSimpleClick = (e: React.MouseEvent) => {
-      e.preventDefault();
-      handleInteraction(e, 'reaction');
-  }
+  const handleClicks = useClickDetection(
+    () => handleInteraction('reaction', 'heart'),
+    () => handleInteraction('reaction', 'fire'),
+    () => handleInteraction('reaction', 'hot-face')
+  );
 
   const stats = [
     { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.reactionCount || 0) },
@@ -146,42 +138,25 @@ export function VideoCard({ video }: VideoCardProps) {
               </div>
             </CardContent>
             <CardFooter className="grid grid-cols-2 gap-px border-t bg-muted/50 p-0">
-                <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={(e) => handleInteraction(e, 'favorite')}>
+                <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={() => handleInteraction('favorite')}>
                     <Bookmark className="h-5 w-5 mr-2" />
                     Favorite
                 </Button>
-                <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={(e) => handleInteraction(e, 'playlist')}>
+                <Button variant="ghost" className="rounded-none text-muted-foreground" onClick={() => handleInteraction('playlist')}>
                     <ListPlus className="h-5 w-5 mr-2" />
                     Add to list
                 </Button>
             </CardFooter>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
                 <div className="relative flex flex-col items-center gap-1">
-                   {showReactions && (
-                       <div className="absolute bottom-full mb-2 flex items-center justify-center">
-                           {reactionEmojis.map((emoji, index) => (
-                               <button 
-                                  key={emoji.name}
-                                  onClick={(e) => handleInteraction(e, 'reaction', emoji.name)}
-                                  className={cn(
-                                    "absolute flex h-10 w-10 items-center justify-center rounded-full bg-background shadow-lg transition-all duration-300 ease-in-out",
-                                    showReactions ? `scale-100 opacity-100 ${emoji.position}` : "scale-0 opacity-0"
-                                  )}
-                                  style={{transitionDelay: `${index * 50}ms`}}
-                               >
-                                  {animations[emoji.name] && <Lottie animationData={animations[emoji.name]} loop={true} style={{width: 32, height: 32}} />}
-                               </button>
-                           ))}
-                       </div>
-                   )}
                     <Button 
                         size="icon" 
                         className="rounded-full h-12 w-12 shadow-lg" 
-                        onMouseDown={handlePressStart}
-                        onMouseUp={handlePressEnd}
-                        onTouchStart={handlePressStart}
-                        onTouchEnd={handlePressEnd}
-                        onClick={handleSimpleClick}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleClicks();
+                        }}
                         aria-label="Add reaction"
                     >
                         <Heart className="h-6 w-6" />
@@ -193,3 +168,5 @@ export function VideoCard({ video }: VideoCardProps) {
       </Card>
   );
 }
+
+    
