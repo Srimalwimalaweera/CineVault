@@ -221,7 +221,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
              <CardContent className="p-2 pt-4 text-sm text-muted-foreground">
               <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1" title="Rating">
-                      {animations.star ? <Lottie animationData={animations.star} loop={true} className="h-4 w-4" /> : <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
+                      {animations.star ? <Lottie animationData={animations.star} loop={true} speed={0.4} className="h-4 w-4" /> : <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
                       <span className="font-semibold text-foreground">{video.ratings?.toFixed(1)}</span>
                   </div>
                   <div className="flex items-center gap-3">
