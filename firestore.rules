@@ -10,9 +10,9 @@
  *    by anyone to allow for browsing. However, all modifications (create, update,
  *    delete) to this collection are restricted to administrative users.
  * 2. Strict User Ownership: All user-generated content (profiles, favorites,
- *    playlists) is stored in a path dedicated to that user (`/users/{userId}`).
- *    Access is strictly limited to the authenticated user who owns that data,
- *    preventing users from accessing or modifying each other's private data.
+ *    playlists, reactions) is stored in a path dedicated to that user or
+ *    validated against their UID. Access is strictly limited to the
+ *    authenticated user who owns that data.
  *
  * Data Structure:
  * - /videos/{videoId}: Public video metadata.
@@ -20,17 +20,6 @@
  * - /users/{userId}: Public user profiles.
  * - /users/{userId}/favorites/{favoriteId}: A user's private list of favorites.
  * - /users/{userId}/playlists/{playlistId}: A user's private video playlists.
- *
- * Key Security Decisions:
- * - Admin Role for Content Management: Write operations on `/videos` are
- *   protected by checking the user's role in their profile document.
- * - Path-Based Ownership: User data is secured by matching the authenticated
- *   user's UID against the `{userId}` wildcard in the document path.
- * - User Profile Security: Users can create and update their own profiles but
- *   are prevented from assigning themselves the 'admin' role or altering
- *   their creation timestamp.
- * - No Global User Listing: The rules do not allow listing the entire `/users`
- *   collection to prevent enumeration of all application users.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -55,11 +44,13 @@ service cloud.firestore {
     }
 
     /**
-     * Checks if the user has administrative privileges by reading their user document.
-     * Note: This is less performant than using custom claims but suitable for development.
+     * Checks if the user has administrative privileges by safely reading their user document.
+     * This check is more robust as it verifies the existence of the document first.
      */
     function isDbAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     /**
@@ -91,7 +82,9 @@ service cloud.firestore {
        */
       match /reactions/{reactionId} {
         allow read: if true;
+        // Allow any signed-in user to create a reaction if they are the owner.
         allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        // Allow the owner of a reaction to update or delete it.
         allow update, delete: if isOwner(resource.data.userId);
       }
     }
