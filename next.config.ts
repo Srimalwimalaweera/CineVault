@@ -35,6 +35,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'googlefonts.github.io',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };

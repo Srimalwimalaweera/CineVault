@@ -144,7 +144,7 @@ export function VideoCard({ video }: VideoCardProps) {
                                   )}
                                   style={{transitionDelay: `${index * 50}ms`}}
                                >
-                                  <img src={emoji.src} alt={emoji.name} className="h-8 w-8"/>
+                                  <Image src={emoji.src} alt={emoji.name} width={32} height={32} unoptimized/>
                                </button>
                            ))}
                        </div>
