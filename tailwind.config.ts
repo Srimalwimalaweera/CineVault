@@ -99,11 +99,21 @@ export default {
           from: { backgroundPosition: '200% 0' },
           to: { backgroundPosition: '-200% 0' },
         },
+        'shimmer-brand': {
+          '0%, 100%': { backgroundPosition: '200% center' },
+          '50%': { backgroundPosition: '-200% center' },
+        },
+        'particle-flow': {
+          '0%': { transform: 'translateY(100%)' },
+          '100%': { transform: 'translateY(-100%)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'shimmer': 'shimmer 4s linear infinite',
+        'shimmer-brand': 'shimmer-brand 4s linear infinite',
+        'particle-flow': 'particle-flow 10s linear infinite',
       },
     },
   },

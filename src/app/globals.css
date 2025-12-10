@@ -89,3 +89,38 @@
     transition-duration: 500ms;
   }
 }
+
+@layer utilities {
+  .particle-flow {
+    overflow: hidden;
+  }
+  .particle-flow::before,
+  .particle-flow::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+  }
+  .particle-flow::before {
+    animation: particle-flow 10s linear infinite;
+    background: 
+      radial-gradient(circle at 10% 20%, hsl(var(--primary-foreground)) 1px, transparent 1px),
+      radial-gradient(circle at 80% 30%, hsl(var(--destructive)) 1px, transparent 1px),
+      radial-gradient(circle at 30% 70%, hsl(var(--accent)) 1px, transparent 1px),
+      radial-gradient(circle at 60% 90%, hsl(var(--primary-foreground)) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+  .particle-flow::after {
+    animation: particle-flow 15s linear infinite;
+    animation-delay: -5s;
+    background: 
+      radial-gradient(circle at 50% 50%, hsl(var(--primary-foreground)) 1px, transparent 1px),
+      radial-gradient(circle at 20% 80%, hsl(var(--destructive)) 1px, transparent 1px),
+      radial-gradient(circle at 90% 10%, hsl(var(--accent)) 1px, transparent 1px);
+    background-size: 75px 75px;
+  }
+}
