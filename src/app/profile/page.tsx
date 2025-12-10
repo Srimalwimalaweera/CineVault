@@ -48,7 +48,7 @@ export default function ProfilePage() {
     return collection(firestore, `users/${user.uid}/playlists`);
   }, [firestore, user]);
 
-  const { data: favorites, isLoading: isLoadingFavorites } = useCollection<Video>(favoritesQuery);
+  const { data: favorites, isLoading: isLoadingFavorites } = useCollection<{videoId: string}>(favoritesQuery);
   const { data: playlists, isLoading: isLoadingPlaylists } = useCollection<Playlist>(playlistsQuery);
 
   const handleUpdateDisplayName = async () => {
