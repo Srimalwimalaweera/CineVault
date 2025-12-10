@@ -45,7 +45,7 @@ const useClickDetection = (
 };
 
 
-export function VideoCard({ video, priority = false }: VideoCardProps) {
+export function VideoCard({ video, priority = false }: { video: Video, priority?: boolean }) {
   const { user } = useAuthContext();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -145,8 +145,10 @@ export function VideoCard({ video, priority = false }: VideoCardProps) {
   const handleButtonClick = (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      // This will only fire if it's a short click (long press timer cleared)
-      if (!showReactions) {
+      // If panel is open, close it. Otherwise, handle clicks.
+      if (showReactions) {
+          setShowReactions(false);
+      } else if (!pressTimer.current) { // Ensure it's a click, not the end of a long press
           handleClicks();
       }
   };
@@ -159,9 +161,9 @@ export function VideoCard({ video, priority = false }: VideoCardProps) {
   ];
   
   const reactionEmojis = [
-    { type: 'fire', animation: animations.fire, rotation: '-rotate-45' },
-    { type: 'heart', animation: animations.heart, rotation: 'translate-y-[-10px]' },
-    { type: 'hot-face', animation: animations.hotFace, rotation: 'rotate-45' },
+    { type: 'fire', animation: animations.fire, transform: 'translateX(-60px) translateY(10px) rotate(-30deg)' },
+    { type: 'heart', animation: animations.heart, transform: 'translateY(-20px)' },
+    { type: 'hot-face', animation: animations.hotFace, transform: 'translateX(60px) translateY(10px) rotate(30deg)' },
   ] as const;
 
   return (
@@ -214,19 +216,18 @@ export function VideoCard({ video, priority = false }: VideoCardProps) {
               className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2"
             >
                 <div className="relative flex flex-col items-center gap-1">
-                    {showReactions && (
-                      <div className="absolute bottom-full mb-2 flex justify-center items-end gap-2">
-                        {reactionEmojis.map((emoji) => (
-                          <div
-                            key={emoji.type}
-                            onClick={() => handleInteraction('reaction', emoji.type)}
-                            className={`cursor-pointer transition-all duration-300 ease-out w-12 h-12 hover:scale-125 ${showReactions ? `scale-100 opacity-100 transform ${emoji.rotation}` : 'scale-0 opacity-0'}`}
-                          >
-                            {emoji.animation && <Lottie animationData={emoji.animation} loop={true} />}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <div className="absolute bottom-full mb-2 flex justify-center items-end">
+                      {reactionEmojis.map((emoji) => (
+                        <div
+                          key={emoji.type}
+                          onClick={() => handleInteraction('reaction', emoji.type)}
+                          className={`cursor-pointer absolute transition-all duration-300 ease-out w-12 h-12 hover:scale-125 ${showReactions ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}
+                          style={{ transform: showReactions ? emoji.transform : 'translateY(0) scale(0)' }}
+                        >
+                          {emoji.animation && <Lottie animationData={emoji.animation} loop={true} />}
+                        </div>
+                      ))}
+                    </div>
                     <Button 
                         size="icon" 
                         className="rounded-full h-12 w-12 shadow-lg" 
