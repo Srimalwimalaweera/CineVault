@@ -14,10 +14,17 @@ import { useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase';
 import { cn } from '@/lib/utils';
+import Lottie from 'lottie-react';
 
 interface VideoCardProps {
   video: Video;
 }
+
+const reactionEmojis = [
+    { name: 'Fire', src: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/lottie.json', position: 'transform -translate-x-12 -translate-y-4' },
+    { name: 'Heart', src: 'https://fonts.gstatic.com/s/e/notoemoji/latest/2764_fe0f/lottie.json', position: 'transform -translate-y-12' },
+    { name: 'Hot', src: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f975/lottie.json', position: 'transform translate-x-12 -translate-y-4' },
+];
 
 export function VideoCard({ video }: VideoCardProps) {
   const { user } = useAuthContext();
@@ -25,6 +32,26 @@ export function VideoCard({ video }: VideoCardProps) {
   const firestore = useFirestore();
   const [showReactions, setShowReactions] = React.useState(false);
   const longPressTimer = React.useRef<NodeJS.Timeout>();
+
+  const [animations, setAnimations] = React.useState<Record<string, any>>({});
+
+  React.useEffect(() => {
+    const fetchAnimations = async () => {
+        const fetchedAnimations: Record<string, any> = {};
+        for (const emoji of reactionEmojis) {
+            try {
+                const response = await fetch(emoji.src);
+                const data = await response.json();
+                fetchedAnimations[emoji.name] = data;
+            } catch (error) {
+                console.error(`Failed to fetch animation for ${emoji.name}`, error);
+            }
+        }
+        setAnimations(fetchedAnimations);
+    };
+
+    fetchAnimations();
+  }, []);
 
   const handleInteraction = (e: React.MouseEvent, type: 'favorite' | 'playlist' | 'reaction', reactionType?: string) => {
     e.preventDefault();
@@ -79,12 +106,6 @@ export function VideoCard({ video }: VideoCardProps) {
     { icon: Download, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.downloadCount || 0) },
   ];
 
-  const reactionEmojis = [
-    { name: 'Fire', src: 'https://googlefonts.github.io/noto-emoji-animation/images/emoji_u1f525.gif', position: 'transform -translate-x-12 -translate-y-4' },
-    { name: 'Heart', src: 'https://googlefonts.github.io/noto-emoji-animation/images/emoji_u2764.gif', position: 'transform -translate-y-12' },
-    { name: 'Hot', src: 'https://googlefonts.github.io/noto-emoji-animation/images/emoji_u1f975.gif', position: 'transform translate-x-12 -translate-y-4' },
-  ];
-
   return (
       <Card className="w-full overflow-hidden transition-all duration-300 ease-in-out">
          <CardHeader className="p-4">
@@ -93,7 +114,7 @@ export function VideoCard({ video }: VideoCardProps) {
             </Link>
          </CardHeader>
         <Link href={`/video/${video.id}`} className="group block outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-            <div className="relative max-h-[500px] w-full overflow-hidden rounded-b-lg">
+            <div className="relative w-full overflow-hidden rounded-b-lg max-h-[500px] bg-muted flex justify-center items-center">
                 <Image 
                     src={video.thumbnailUrl} 
                     alt={video.title} 
@@ -104,7 +125,7 @@ export function VideoCard({ video }: VideoCardProps) {
             </div>
         </Link>
         <div className="relative" onMouseLeave={() => setShowReactions(false)}>
-            <CardContent className="p-2 pt-4 text-sm text-muted-foreground">
+             <CardContent className="p-2 pt-4 text-sm text-muted-foreground">
               <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1" title="Rating">
                       <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
@@ -130,7 +151,7 @@ export function VideoCard({ video }: VideoCardProps) {
                     Add to list
                 </Button>
             </CardFooter>
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
                 <div className="relative flex flex-col items-center gap-1">
                    {showReactions && (
                        <div className="absolute bottom-full mb-2 flex items-center justify-center">
@@ -144,7 +165,7 @@ export function VideoCard({ video }: VideoCardProps) {
                                   )}
                                   style={{transitionDelay: `${index * 50}ms`}}
                                >
-                                  <Image src={emoji.src} alt={emoji.name} width={32} height={32} unoptimized/>
+                                  {animations[emoji.name] && <Lottie animationData={animations[emoji.name]} loop={true} style={{width: 32, height: 32}} />}
                                </button>
                            ))}
                        </div>
