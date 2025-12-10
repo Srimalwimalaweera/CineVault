@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -57,8 +58,8 @@ export function VideoCard({ video }: VideoCardProps) {
             className="object-cover transition-transform duration-300 group-hover:scale-105" 
             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 20vw, (max-width: 1280px) 16vw, 14vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-          <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+          <div className="absolute top-2 right-2 flex flex-col gap-2">
             <Button size="icon" className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 backdrop-blur-sm" onClick={(e) => handleInteraction(e, 'favorite')} aria-label="Add to favorites">
               <Heart className="h-4 w-4 text-white" />
             </Button>
