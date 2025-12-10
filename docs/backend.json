@@ -92,6 +92,11 @@
             "type": "string",
             "description": "The timestamp when the user profile was created.",
             "format": "date-time"
+        },
+        "birthday": {
+          "type": "string",
+          "description": "The user's birthday.",
+          "format": "date"
         }
       },
       "required": [
