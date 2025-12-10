@@ -61,14 +61,14 @@ export function VideoCard({ video }: VideoCardProps) {
             </Link>
          </CardHeader>
         <Link href={`/video/${video.id}`} className="group block outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-            <div className="relative aspect-video w-full">
-            <Image 
-                src={video.thumbnailUrl} 
-                alt={video.title} 
-                fill 
-                className="object-cover transition-transform duration-300 group-hover:scale-105" 
-                sizes="(max-width: 768px) 100vw, 50vw"
-            />
+            <div className="relative max-h-[600px] w-full overflow-hidden">
+                <Image 
+                    src={video.thumbnailUrl} 
+                    alt={video.title} 
+                    width={1080}
+                    height={1080}
+                    className="object-contain h-full w-full transition-transform duration-300 group-hover:scale-105" 
+                />
             </div>
         </Link>
         <CardContent className="p-2 text-sm text-muted-foreground">
