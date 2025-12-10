@@ -66,7 +66,8 @@ service cloud.firestore {
      * This prevents users from escalating their own privileges.
      */
     function isNotEscalatingRole() {
-      let isAlreadyAdmin = exists(path) && resource.data.role == 'admin';
+      // The `resource != null` check handles creation, where `resource` is null.
+      let isAlreadyAdmin = resource != null && resource.data.role == 'admin';
       return request.resource.data.role != 'admin' || isAlreadyAdmin;
     }
 
