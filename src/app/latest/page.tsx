@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useFirestore } from '@/firebase';
-import { collection, query, orderBy, limit, getDocs, startAfter, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, startAfter, DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { VideoCard } from '@/components/video-card';
@@ -51,6 +51,7 @@ export default function LatestPage() {
     try {
       let q = query(
         collection(firestore, 'videos'),
+        where('status', '==', 'published'),
         orderBy('createdAt', 'desc'),
         limit(PAGE_SIZE)
       );

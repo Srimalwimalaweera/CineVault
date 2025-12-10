@@ -85,6 +85,7 @@ export function AdminUploadDialog() {
             downloadCount: 0,
             viewCount: 0,
             createdAt: serverTimestamp(),
+            status: 'published',
         };
         
         addDocumentNonBlocking(videosCollection, newVideo);

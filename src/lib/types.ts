@@ -11,6 +11,8 @@ export type Video = {
   downloadCount?: number;
   viewCount?: number;
   createdAt: any; // Firestore Timestamp
+  status?: 'published' | 'trashed';
+  trashedAt?: any; // Firestore Timestamp
 };
 
 export type Rating = {

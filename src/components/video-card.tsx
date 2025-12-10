@@ -7,12 +7,12 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Bookmark, ListPlus, ThumbsUp, Play, Download, Heart } from 'lucide-react';
+import { Bookmark, ListPlus, ThumbsUp, Play, Download, Heart, Trash2 } from 'lucide-react';
 import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, serverTimestamp, doc, deleteDoc, updateDoc, increment } from 'firebase/firestore';
-import { addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import Lottie from "lottie-react";
 import { cn } from '@/lib/utils';
 import { Rating } from '@/components/rating';
@@ -22,28 +22,26 @@ import { AddToListDialog } from '@/components/add-to-list-dialog';
 
 // Hook to detect single/double/triple clicks
 const useClickDetection = (
-  onSingleClick: () => void,
-  onDoubleClick: () => void,
-  onTripleClick: () => void,
+  onSingleClick: (e: React.MouseEvent<HTMLDivElement>) => void,
+  onDoubleClick: (e: React.MouseEvent<HTMLDivElement>) => void,
+  onTripleClick: (e: React.MouseEvent<HTMLDivElement>) => void,
   delay = 250
 ) => {
   const [clickCount, setClickCount] = React.useState(0);
 
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      if (clickCount === 1) onSingleClick();
-      else if (clickCount === 2) onDoubleClick();
-      else if (clickCount >= 3) onTripleClick();
-      setClickCount(0);
+  return (e: React.MouseEvent<HTMLDivElement>) => {
+    e.persist(); // Persist the event
+    setClickCount(prev => prev + 1);
+
+    setTimeout(() => {
+      setClickCount(currentClickCount => {
+        if (currentClickCount === 1) onSingleClick(e);
+        else if (currentClickCount === 2) onDoubleClick(e);
+        else if (currentClickCount >= 3) onTripleClick(e);
+        return 0; // Reset after handling
+      });
     }, delay);
-
-    // This is the key: clear the timer on each new click.
-    if (clickCount > 0) {
-      return () => clearTimeout(timer);
-    }
-  }, [clickCount, delay, onSingleClick, onDoubleClick, onTripleClick]);
-
-  return () => setClickCount(prev => prev + 1);
+  };
 };
 
 type HeartAnimation = {
@@ -54,7 +52,7 @@ type HeartAnimation = {
 };
 
 export function VideoCard({ video, priority = false }: { video: Video, priority?: boolean }) {
-  const { user } = useAuthContext();
+  const { user, isAdmin } = useAuthContext();
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -136,7 +134,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     fetchAnimations();
   }, []);
 
-  const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction' | 'rating', value?: 'heart' | 'fire' | 'hot-face' | number) => {
+  const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction' | 'rating' | 'trash', value?: 'heart' | 'fire' | 'hot-face' | number) => {
     if (!user || !firestore) {
       toast({ title: "Login Required", description: `Please log in to interact.`, variant: "destructive" });
       return;
@@ -205,7 +203,20 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         });
     }
 
-  }, [user, firestore, video.id, video.title, toast, isFavorited]);
+    if (type === 'trash') {
+        if (!isAdmin) return;
+        const videoRef = doc(firestore, 'videos', video.id);
+        updateDocumentNonBlocking(videoRef, {
+            status: 'trashed',
+            trashedAt: serverTimestamp()
+        });
+        toast({
+            title: 'Video Trashed',
+            description: `"${video.title}" moved to trash.`,
+        });
+    }
+
+  }, [user, firestore, video.id, video.title, toast, isFavorited, isAdmin]);
 
     const handleWatchNowClick = React.useCallback(async (e: React.MouseEvent<HTMLAnchorElement>) => {
         if (!firestore) return;
@@ -237,20 +248,27 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
 
 
   const onSingleClick = React.useCallback(() => {
-    if (userReaction) {
-      if (userReactionRef) {
-        deleteDocumentNonBlocking(userReactionRef);
-        toast({
-          title: "Reaction Removed",
-        });
-      }
-    } else {
+    setIsLightboxOpen(true);
+  }, []);
+
+  const onDoubleClick = React.useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const newHeart: HeartAnimation = {
+      id: Date.now(),
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      rotation: Math.random() * 40 - 20,
+    };
+    setHearts(currentHearts => [...currentHearts, newHeart]);
+    if (!likedInSession.current) {
       handleInteraction('reaction', 'heart');
     }
-  }, [userReaction, userReactionRef, handleInteraction, toast]);
+    setTimeout(() => {
+      setHearts(currentHearts => currentHearts.filter(h => h.id !== newHeart.id));
+    }, 1500);
+  }, [handleInteraction]);
 
-  const onDoubleClick = React.useCallback(() => handleInteraction('reaction', 'fire'), [handleInteraction]);
-  const onTripleClick = React.useCallback(() => handleInteraction('reaction', 'hot-face'), [handleInteraction]);
+  const onTripleClick = onDoubleClick; // Triple click also triggers a heart
 
   const handleClicks = useClickDetection(onSingleClick, onDoubleClick, onTripleClick);
   
@@ -267,36 +285,23 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     }
   };
 
-  const handleButtonClick = (e: React.MouseEvent) => {
+  const handleHeartButtonClick = (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
       if (showReactions) {
           setShowReactions(false);
       } else { 
-          handleClicks();
+        if (userReaction) {
+          if (userReactionRef) {
+            deleteDocumentNonBlocking(userReactionRef);
+            toast({
+              title: "Reaction Removed",
+            });
+          }
+        } else {
+          handleInteraction('reaction', 'heart');
+        }
       }
-  };
-
-  const handleThumbnailClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const newHeart: HeartAnimation = {
-      id: Date.now(),
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-      rotation: Math.random() * 40 - 20, // Random rotation between -20 and 20 degrees
-    };
-
-    setHearts(currentHearts => [...currentHearts, newHeart]);
-
-    // Only send the 'like' to DB on the first interaction
-    if (!likedInSession.current) {
-      handleInteraction('reaction', 'heart');
-    }
-
-    // Remove the heart after the animation
-    setTimeout(() => {
-      setHearts(currentHearts => currentHearts.filter(h => h.id !== newHeart.id));
-    }, 1500);
   };
 
   const stats = [
@@ -328,7 +333,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
          </CardHeader>
         <div 
           className="group block outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
-          onClick={handleThumbnailClick}
+          onClick={handleClicks}
         >
             <div className="relative w-full overflow-hidden rounded-b-lg max-h-[500px] bg-muted flex justify-center items-center">
                 <Image 
@@ -339,6 +344,20 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
                     priority={priority}
                     className="object-contain h-full w-full transition-transform duration-300 group-hover:scale-105" 
                 />
+                {isAdmin && (
+                    <Button 
+                        size="icon" 
+                        variant="destructive"
+                        className="absolute top-2 left-2 z-10 h-10 w-10 opacity-70 hover:opacity-100"
+                        onClick={(e) => {
+                            e.stopPropagation(); // Prevent card click
+                            handleInteraction('trash');
+                        }}
+                    >
+                        <Trash2 />
+                        <span className="sr-only">Move to Trash</span>
+                    </Button>
+                )}
                 {hearts.map(heart => (
                   <div
                     key={heart.id}
@@ -426,7 +445,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
                         onMouseUp={handlePressEnd}
                         onTouchStart={handlePressStart}
                         onTouchEnd={handlePressEnd}
-                        onClick={handleButtonClick}
+                        onClick={handleHeartButtonClick}
                         onContextMenu={(e) => e.preventDefault()}
                         aria-label="Add reaction"
                     >

@@ -44,6 +44,7 @@ export default function FavoritesPage() {
     // If you expect more, you would need to batch the queries.
     return query(
       collection(firestore, 'videos'),
+      where('status', '==', 'published'),
       where(documentId(), 'in', favoriteVideoIds.slice(0, 30))
     );
   }, [firestore, favoriteVideoIds]);

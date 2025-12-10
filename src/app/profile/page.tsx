@@ -15,12 +15,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, User, KeyRound, Save, Heart, ListVideo } from 'lucide-react';
+import { LogOut, User, KeyRound, Save, Heart, ListVideo, Trash2 } from 'lucide-react';
 import type { Playlist, Video } from '@/lib/types';
 import Link from 'next/link';
 
 export default function ProfilePage() {
-  const { user, isUserLoading, logout } = useAuthContext();
+  const { user, isUserLoading, logout, isAdmin } = useAuthContext();
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
@@ -205,6 +205,21 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
+            {isAdmin && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 font-headline">
+                            <Trash2 /> Admin
+                        </CardTitle>
+                        <CardDescription>Manage application content.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button asChild>
+                            <Link href="/admin/trash">Manage Trash</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
 
             <div className="text-center">
               <Button variant="ghost" onClick={logout}>
