@@ -80,10 +80,10 @@ export function AdminUploadDialog() {
             description: values.description,
             videoUrl: values.videoUrl,
             thumbnailUrl: values.thumbnailUrl,
-            ratings: Math.round((Math.random() * (5 - 3) + 3) * 10) / 10,
-            reactionCount: Math.floor(Math.random() * 5000),
-            downloadCount: Math.floor(Math.random() * 10000),
-            viewCount: Math.floor(Math.random() * 200000),
+            ratings: 0,
+            reactionCount: 0,
+            downloadCount: 0,
+            viewCount: 0,
         };
         
         addDocumentNonBlocking(videosCollection, newVideo);
