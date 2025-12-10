@@ -98,46 +98,46 @@ export function Rating({
       onTouchStart={handleInteractionStart}
       onTouchMove={handleInteractionMove}
       onTouchEnd={handleInteractionEnd}
-      className="flex items-center gap-2 cursor-pointer select-none"
+      className="relative flex items-center gap-2 cursor-pointer select-none"
       title="Rating"
     >
-      <span className={cn("font-medium text-sm transition-opacity", isRating && "opacity-0")}>Rating</span>
-      <div className="relative flex items-center">
+      <div className={cn("flex items-center gap-2 transition-opacity", isRating && "opacity-0")}>
+        <span className="font-medium text-sm">Rating</span>
         <div className="flex items-center gap-1">
-          {starAnimation && (
-             <Lottie
-                lottieRef={lottieRef}
-                animationData={starAnimation}
-                loop={false}
-                autoplay={false}
-                className="h-5 w-5"
-              />
-          )}
-          <span className="font-semibold text-foreground">
-            {averageRating.toFixed(1)}
-          </span>
+            {starAnimation && (
+                <Lottie
+                    lottieRef={lottieRef}
+                    animationData={starAnimation}
+                    loop={false}
+                    autoplay={false}
+                    className="h-5 w-5"
+                />
+            )}
+            <span className="font-semibold text-foreground">
+                {averageRating.toFixed(1)}
+            </span>
         </div>
-        <div
-          className={cn(
-            'absolute inset-0 flex items-center justify-center gap-1 bg-background/80 backdrop-blur-sm transition-opacity duration-300 rounded-lg',
-            isRating ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          )}
-        >
-          {[...Array(totalStars)].map((_, index) => {
-            const starValue = index + 1;
-            return (
-              <Star
-                key={starValue}
-                className={cn(
-                  'h-24 w-24 transition-colors',
-                  starValue <= ratingToShow
-                    ? 'text-yellow-400 fill-yellow-400'
-                    : 'text-muted-foreground/30'
-                )}
-              />
-            );
-          })}
-        </div>
+      </div>
+      <div
+        className={cn(
+          'absolute inset-0 flex items-center justify-center gap-1 bg-background/80 backdrop-blur-sm transition-opacity duration-300 rounded-lg',
+          isRating ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        )}
+      >
+        {[...Array(totalStars)].map((_, index) => {
+          const starValue = index + 1;
+          return (
+            <Star
+              key={starValue}
+              className={cn(
+                'h-24 w-24 transition-colors',
+                starValue <= ratingToShow
+                  ? 'text-yellow-400 fill-yellow-400'
+                  : 'text-muted-foreground/30'
+              )}
+            />
+          );
+        })}
       </div>
     </div>
   );
