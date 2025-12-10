@@ -170,7 +170,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
 
   const MainReactionIcon = () => {
     if (userReaction && animations[userReaction.type]) {
-      return <Lottie animationData={animations[userReaction.type]} loop={true} className="h-8 w-8" />;
+      return <Lottie animationData={animations[userReaction.type]} loop={true} className="h-6 w-6" />;
     }
     return <Heart className="h-6 w-6" />;
   };
