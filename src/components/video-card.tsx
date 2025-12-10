@@ -87,16 +87,20 @@ export function VideoCard({ video }: VideoCardProps) {
   };
 
   const handlePressStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    clearTimeout(longPressTimer.current);
     longPressTimer.current = setTimeout(() => {
         setShowReactions(true);
     }, 300);
   };
 
   const handlePressEnd = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
     clearTimeout(longPressTimer.current);
   };
   
   const handleSimpleClick = (e: React.MouseEvent) => {
+      e.preventDefault();
       handleInteraction(e, 'reaction');
   }
 
@@ -107,7 +111,7 @@ export function VideoCard({ video }: VideoCardProps) {
   ];
 
   return (
-      <Card className="w-full overflow-hidden transition-all duration-300 ease-in-out">
+      <Card className="w-full max-w-2xl mx-auto overflow-hidden transition-all duration-300 ease-in-out">
          <CardHeader className="p-4">
             <Link href={`/video/${video.id}`} className="group outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg">
                 <CardTitle className="font-headline text-lg group-hover:underline">{video.title}</CardTitle>
