@@ -1,5 +1,5 @@
 
-"use client";
+'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -17,6 +17,7 @@ import Lottie from "lottie-react";
 import { cn } from '@/lib/utils';
 import { Rating } from '@/components/rating';
 import type { Rating as RatingType } from '@/lib/types';
+import { VideoLightbox } from '@/components/video-lightbox';
 
 // Hook to detect single/double/triple clicks
 const useClickDetection = (
@@ -56,6 +57,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const firestore = useFirestore();
 
   const [showReactions, setShowReactions] = React.useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
   const [animations, setAnimations] = React.useState<{ heart: any; fire: any; hotFace: any; star: any; }>({ heart: null, fire: null, hotFace: null, star: null });
   const pressTimer = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -240,13 +242,17 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   };
 
   return (
+      <>
       <Card className="w-full max-w-2xl mx-auto overflow-hidden transition-all duration-300 ease-in-out">
          <CardHeader className="p-4">
             <Link href={`/video/${video.id}`} className="group outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg">
                 <CardTitle className="font-headline text-lg group-hover:underline">{video.title}</CardTitle>
             </Link>
          </CardHeader>
-        <Link href={`/video/${video.id}`} className="group block outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+        <div 
+          className="group block outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+          onClick={() => setIsLightboxOpen(true)}
+        >
             <div className="relative w-full overflow-hidden rounded-b-lg max-h-[500px] bg-muted flex justify-center items-center">
                 <Image 
                     src={video.thumbnailUrl} 
@@ -257,7 +263,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
                     className="object-contain h-full w-full transition-transform duration-300 group-hover:scale-105" 
                 />
             </div>
-        </Link>
+        </div>
         <div className="relative">
              <CardContent className="p-2 pt-4 text-sm text-muted-foreground">
               <div className="flex items-center justify-between">
@@ -332,5 +338,11 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
             </div>
         </div>
       </Card>
+      <VideoLightbox 
+        isOpen={isLightboxOpen} 
+        onOpenChange={setIsLightboxOpen}
+        video={video}
+      />
+      </>
   );
 }
