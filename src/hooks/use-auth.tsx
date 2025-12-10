@@ -19,7 +19,7 @@ type AuthContextType = {
   user: User | null;
   isUserLoading: boolean;
   isAdmin: boolean;
-  login: (email: string, password: string) => void;
+  login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => void;
   signupWithGoogle: () => void;
   logout: () => void;
@@ -65,12 +65,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: "Welcome back to CineVault!",
       });
     } catch (error: any) {
-      console.error("Login Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: "Invalid email or password. Please try again.",
-      });
+      // This error is expected on bad password, so we just show a toast.
+      if (error.code === 'auth/invalid-credential') {
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: "Invalid email or password. Please try again.",
+        });
+      } else {
+        // For other unexpected errors, log them and show a generic message.
+        console.error("Login Error:", error);
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: "An unexpected error occurred. Please try again.",
+        });
+      }
     }
   }, [auth, toast]);
 
@@ -106,6 +116,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: "Welcome to CineVault!",
       });
     } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        // This is a common case, so we can handle it gracefully.
+        return;
+      }
       console.error("Google Sign-In Error:", error);
       toast({
         variant: "destructive",
