@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Flame, PlusSquare, Sparkles, User } from 'lucide-react';
+import { Home, Flame, PlusSquare, Sparkles, User, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AdminUploadDialog } from '../admin/upload-dialog';
 import { useAuthContext } from '@/hooks/use-auth';
@@ -10,6 +10,7 @@ import { useAuthContext } from '@/hooks/use-auth';
 const navItems = [
   { href: '/', icon: Home, label: 'Home' },
   { href: '/trending', icon: Flame, label: 'Trending' },
+  { href: '/pro', icon: Crown, label: 'Pro Videos' },
   { href: '/latest', icon: Sparkles, label: 'Latest' },
   { href: '/profile', icon: User, label: 'Profile' },
 ];
