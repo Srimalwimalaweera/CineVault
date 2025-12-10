@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Bookmark, ListPlus, Star, ThumbsUp, Download, Eye, Heart } from 'lucide-react';
+import { Bookmark, ListPlus, Star, ThumbsUp, Eye, Heart } from 'lucide-react';
 import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -39,6 +39,7 @@ const useClickDetection = (
     }, delay);
 
     return () => clearTimeout(timer);
+  // NOTE: The click handlers are wrapped in useCallback below to prevent re-renders
   }, [clickCount, onSingleClick, onDoubleClick, onTripleClick, delay]);
 
   return () => setClickCount(prev => prev + 1);
@@ -135,7 +136,6 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
 
   const onSingleClick = React.useCallback(() => {
     if (userReaction) {
-      // If a reaction exists, remove it.
       if (userReactionRef) {
         deleteDocumentNonBlocking(userReactionRef);
         toast({
@@ -143,7 +143,6 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         });
       }
     } else {
-      // If no reaction, add a heart reaction.
       handleInteraction('reaction', 'heart');
     }
   }, [userReaction, userReactionRef, handleInteraction, toast]);
@@ -179,7 +178,6 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const stats = [
     { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(reactions?.length || 0) },
     { icon: Eye, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.viewCount || 0) },
-    { icon: Download, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.downloadCount || 0) },
   ];
   
   const reactionEmojis = [
@@ -277,5 +275,3 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       </Card>
   );
 }
-
-    
