@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, User, KeyRound, Save, Heart, ListVideo } from 'lucide-react';
 import type { Playlist, Video } from '@/lib/types';
+import Link from 'next/link';
 
 export default function ProfilePage() {
   const { user, isUserLoading, logout } = useAuthContext();
@@ -160,7 +161,9 @@ export default function ProfilePage() {
                   )}
                 </CardContent>
                 <CardFooter>
-                    <Button variant="outline" className="w-full">View Favorites</Button>
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link href="/profile/favorites">View Favorites</Link>
+                    </Button>
                 </CardFooter>
               </Card>
               <Card>
@@ -178,7 +181,9 @@ export default function ProfilePage() {
                   )}
                 </CardContent>
                  <CardFooter>
-                    <Button variant="outline" className="w-full">View Playlists</Button>
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link href="/profile/playlists">View Playlists</Link>
+                    </Button>
                 </CardFooter>
               </Card>
             </div>
