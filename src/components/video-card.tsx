@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Bookmark, ListPlus, Star, ThumbsUp, Download, Eye, Heart } from 'lucide-react';
 import type { Video } from '@/lib/types';
 import * as React from 'react';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, serverTimestamp, doc } from 'firebase/firestore';
 import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
 import Lottie from "lottie-react";
@@ -54,6 +54,13 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const [animations, setAnimations] = React.useState({ heart: null, fire: null, hotFace: null });
   const pressTimer = React.useRef<NodeJS.Timeout | null>(null);
 
+  const userReactionRef = useMemoFirebase(() => {
+    if (!firestore || !user || !video.id) return null;
+    return doc(firestore, `videos/${video.id}/reactions`, user.uid);
+  }, [firestore, user, video.id]);
+
+  const { data: userReaction } = useDoc<{type: 'heart' | 'fire' | 'hot-face'}>(userReactionRef);
+
   React.useEffect(() => {
     const fetchAnimations = async () => {
       try {
@@ -80,7 +87,6 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     }
     
     if (type === 'reaction' && reactionType) {
-        // Use user's UID as the document ID for their reaction on this video
         const reactionRef = doc(firestore, `videos/${video.id}/reactions`, user.uid);
         const newReaction = {
             userId: user.uid,
@@ -88,14 +94,13 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
             type: reactionType,
             createdAt: serverTimestamp(),
         };
-        // Use setDoc with merge to create or update the user's reaction
         setDocumentNonBlocking(reactionRef, newReaction, { merge: true });
         
         toast({ 
             title: "Reaction Added!",
             description: `You reacted with ${reactionType} to "${video.title}".`
         });
-        setShowReactions(false); // Close the panel after selection
+        setShowReactions(false);
         return;
     }
 
@@ -111,7 +116,6 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     }
     
     if (type === 'playlist') {
-        // For simplicity, we add to a default playlist. A real app would let user choose.
         const collectionRef = collection(firestore, `users/${user.uid}/playlists`);
         const data = { name: 'My Playlist', videoIds: [video.id], userId: user.uid };
         addDocumentNonBlocking(collectionRef, data);
@@ -132,7 +136,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const handlePressStart = () => {
     pressTimer.current = setTimeout(() => {
       setShowReactions(true);
-    }, 500); // 500ms for long press
+    }, 500);
   };
 
   const handlePressEnd = () => {
@@ -145,14 +149,12 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const handleButtonClick = (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      // If panel is open, close it. Otherwise, handle clicks.
       if (showReactions) {
           setShowReactions(false);
-      } else if (!pressTimer.current) { // Ensure it's a click, not the end of a long press
+      } else if (!pressTimer.current) { 
           handleClicks();
       }
   };
-
 
   const stats = [
     { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.reactionCount || 0) },
@@ -165,6 +167,13 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     { type: 'heart', animation: animations.heart, transform: 'translateY(-20px)' },
     { type: 'hot-face', animation: animations.hotFace, transform: 'translateX(60px) translateY(10px) rotate(30deg)' },
   ] as const;
+
+  const MainReactionIcon = () => {
+    if (userReaction && animations[userReaction.type]) {
+      return <Lottie animationData={animations[userReaction.type]} loop={true} className="h-8 w-8" />;
+    }
+    return <Heart className="h-6 w-6" />;
+  };
 
   return (
       <Card className="w-full max-w-2xl mx-auto overflow-hidden transition-all duration-300 ease-in-out">
@@ -230,16 +239,16 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
                     </div>
                     <Button 
                         size="icon" 
-                        className="rounded-full h-12 w-12 shadow-lg" 
+                        className="rounded-full h-12 w-12 shadow-lg flex items-center justify-center" 
                         onMouseDown={handlePressStart}
                         onMouseUp={handlePressEnd}
                         onTouchStart={handlePressStart}
                         onTouchEnd={handlePressEnd}
                         onClick={handleButtonClick}
-                        onContextMenu={(e) => e.preventDefault()} // Prevents context menu on long press
+                        onContextMenu={(e) => e.preventDefault()}
                         aria-label="Add reaction"
                     >
-                        <Heart className="h-6 w-6" />
+                       <MainReactionIcon />
                     </Button>
                     <span className="text-xs font-medium text-muted-foreground">Reaction</span>
                 </div>
