@@ -7,6 +7,9 @@ import { X, ThumbsUp, Download, Bookmark, ListPlus, Play, ArrowLeft } from 'luci
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import type { Video } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -124,6 +127,12 @@ export function VideoLightbox({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
+        {/* Visually hidden header for accessibility */}
+        <DialogHeader className="sr-only">
+          <DialogTitle>{video.title}</DialogTitle>
+          <DialogDescription>{video.description}</DialogDescription>
+        </DialogHeader>
+
         <div 
           className="relative w-full h-full flex flex-col items-center justify-center"
            style={{ 
@@ -197,6 +206,7 @@ export function VideoLightbox({
             className="absolute top-4 right-4 h-12 w-12 rounded-full bg-black/50 text-white hover:bg-black/75 hover:text-white z-10"
             aria-label="Close lightbox"
         >
+            <X className="h-6 w-6" />
         </Button>
       </DialogContent>
     </Dialog>
