@@ -78,27 +78,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (userCredential && userCredential.user) {
         await createUserProfile(userCredential.user);
       }
-      toast({
-        title: "Login Successful",
-        description: "Welcome back to XVault!",
-      });
     } catch (error: any) {
-      if (error.code === 'auth/invalid-credential') {
-        toast({
-          variant: "destructive",
-          title: "Login Failed",
-          description: "Invalid email or password. Please try again.",
-        });
-      } else {
-        console.error("Login Error:", error);
-        toast({
-          variant: "destructive",
-          title: "Login Failed",
-          description: "An unexpected error occurred. Please try again.",
-        });
-      }
+      console.error("Login Error:", error);
     }
-  }, [auth, toast, createUserProfile]);
+  }, [auth, createUserProfile]);
 
   const signup = useCallback(async (email: string, password: string) => {
     try {
@@ -106,19 +89,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (userCredential && userCredential.user) {
             await createUserProfile(userCredential.user);
         }
-        toast({
-            title: "Account Created!",
-            description: "Welcome to XVault!",
-        });
     } catch (error: any) {
         console.error("Signup Error:", error);
-        toast({
-            variant: "destructive",
-            title: "Sign-up Failed",
-            description: error.message || "An unknown error occurred. Please try again.",
-        });
     }
-  }, [auth, toast, createUserProfile]);
+  }, [auth, createUserProfile]);
 
 
   const signupWithGoogle = useCallback(async () => {
@@ -126,32 +100,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userCredential = await initiateGoogleSignIn(auth);
       if (userCredential && userCredential.user) {
         await createUserProfile(userCredential.user);
-        toast({
-          title: "Signed in with Google",
-          description: "Welcome to XVault!",
-        });
       }
       // If userCredential is undefined (because the user closed the popup),
       // we simply do nothing.
     } catch (error: any) {
       // This will now only catch other errors, as popup-closed is handled in initiateGoogleSignIn
       console.error("Google Sign-In Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Google Sign-In Failed",
-        description: error.message || "An unknown error occurred. Please try again.",
-      });
     }
-  }, [auth, toast, createUserProfile]);
+  }, [auth, createUserProfile]);
 
 
   const logout = useCallback(() => {
     signOut(auth);
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
-  }, [auth, toast]);
+  }, [auth]);
 
 
   return (

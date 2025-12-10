@@ -136,7 +136,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
 
   const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction' | 'rating' | 'trash', value?: 'heart' | 'fire' | 'hot-face' | number) => {
     if (!user || !firestore) {
-      toast({ title: "Login Required", description: `Please log in to interact.`, variant: "destructive" });
+      console.error("Login Required");
       return;
     }
     
@@ -152,11 +152,6 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         
         if (value === 'heart' && !likedInSession.current) {
           likedInSession.current = true; // Mark as liked for this session
-        } else if (value !== 'heart') {
-          toast({ 
-              title: "Reaction Added!",
-              description: `You reacted with ${value} to "${video.title}".`
-          });
         }
         
         setShowReactions(false);
@@ -170,10 +165,6 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         } else {
           const favData = { videoId: video.id, userId: user.uid, createdAt: serverTimestamp() };
           setDocumentNonBlocking(favRef, favData, { merge: true });
-          toast({ 
-              title: "Added to Favorites",
-              description: `"${video.title}" has been added.`
-          });
         }
         return;
     }
@@ -192,10 +183,6 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
             createdAt: serverTimestamp(),
         };
         setDocumentNonBlocking(ratingRef, newRating, { merge: true });
-        toast({
-            title: "Rating Submitted!",
-            description: `You rated "${video.title}" ${value} stars.`
-        });
     }
 
     if (type === 'trash') {
@@ -205,13 +192,9 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
             status: 'trashed',
             trashedAt: serverTimestamp()
         });
-        toast({
-            title: 'Video Trashed',
-            description: `"${video.title}" moved to trash.`,
-        });
     }
 
-  }, [user, firestore, video.id, video.title, toast, isFavorited, isAdmin]);
+  }, [user, firestore, video.id, video.title, isFavorited, isAdmin]);
 
     const handleWatchNowClick = React.useCallback(async (e: React.MouseEvent<HTMLAnchorElement>) => {
         if (!firestore) return;
@@ -289,9 +272,6 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         if (userReaction) {
           if (userReactionRef) {
             deleteDocumentNonBlocking(userReactionRef);
-            toast({
-              title: "Reaction Removed",
-            });
           }
         } else {
           handleInteraction('reaction', 'heart');

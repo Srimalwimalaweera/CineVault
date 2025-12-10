@@ -71,16 +71,11 @@ export default function LatestPage() {
 
     } catch (error) {
       console.error("Error fetching videos: ", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not fetch the latest videos. Please try again later.",
-      });
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  }, [firestore, lastVisible, toast]);
+  }, [firestore, lastVisible]);
 
   useEffect(() => {
     fetchVideos(true);

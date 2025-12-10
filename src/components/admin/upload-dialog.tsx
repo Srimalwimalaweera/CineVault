@@ -61,15 +61,8 @@ export function AdminUploadDialog() {
     try {
       const text = await navigator.clipboard.readText();
       form.setValue(fieldName, text, { shouldValidate: true });
-      toast({
-        title: "Pasted from clipboard!",
-      });
     } catch (error) {
-      toast({
-        title: "Failed to paste",
-        description: "Could not read from clipboard. Please check browser permissions.",
-        variant: "destructive"
-      })
+      console.error("Failed to paste", error);
     }
   }
 
@@ -89,21 +82,12 @@ export function AdminUploadDialog() {
         };
         
         addDocumentNonBlocking(videosCollection, newVideo);
-
-        toast({
-            title: "Video Submitted",
-            description: `"${values.title}" has been added to the database.`,
-        });
         
         form.reset();
         setOpen(false);
 
     } catch (error) {
-         toast({
-            title: "Upload Failed",
-            description: "There was an error submitting your video. Please try again.",
-            variant: "destructive"
-        });
+         console.error("Upload Failed", error);
     }
   }
 

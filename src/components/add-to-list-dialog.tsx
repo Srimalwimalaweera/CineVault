@@ -108,19 +108,10 @@ export function AddToListDialog({ videoId, children }: AddToListDialogProps) {
           createdAt: serverTimestamp(),
         }
       );
-      toast({
-        title: 'Playlist Created',
-        description: `"${newPlaylistName}" created and video added.`,
-      });
       setSelectedPlaylists((prev) => ({ ...prev, [newPlaylistRef.id]: true }));
       setNewPlaylistName('');
     } catch (error) {
       console.error('Error creating playlist:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Could not create playlist.',
-      });
     } finally {
       setIsCreating(false);
     }
@@ -169,18 +160,9 @@ export function AddToListDialog({ videoId, children }: AddToListDialogProps) {
 
     try {
       await batch.commit();
-      toast({
-        title: 'Playlists Updated',
-        description: 'Your changes have been saved.',
-      });
       setOpen(false);
     } catch (error) {
       console.error('Error saving playlists:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Could not save your changes.',
-      });
     } finally {
       setIsSaving(false);
     }
@@ -189,11 +171,7 @@ export function AddToListDialog({ videoId, children }: AddToListDialogProps) {
   const onOpenDialog = (isOpen: boolean) => {
     if (!user) {
         if (isOpen) {
-            toast({
-                variant: 'destructive',
-                title: 'Login Required',
-                description: 'You need to be logged in to manage playlists.',
-            });
+            console.error('You need to be logged in to manage playlists.');
         }
         setOpen(false);
     } else {
@@ -289,5 +267,3 @@ export function AddToListDialog({ videoId, children }: AddToListDialogProps) {
     </Dialog>
   );
 }
-
-    

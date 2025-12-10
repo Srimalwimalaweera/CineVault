@@ -53,7 +53,7 @@ export default function ProfilePage() {
 
   const handleUpdateDisplayName = async () => {
     if (!user || !firestore || !displayName.trim()) {
-      toast({ title: 'Display name cannot be empty.', variant: 'destructive' });
+      console.error('Display name cannot be empty.');
       return;
     }
     setIsSavingName(true);
@@ -63,10 +63,8 @@ export default function ProfilePage() {
       // Update Firestore profile
       const userDocRef = doc(firestore, 'users', user.uid);
       await updateDoc(userDocRef, { displayName: displayName.trim() });
-      toast({ title: 'Display name updated successfully!' });
     } catch (error: any) {
       console.error('Error updating display name:', error);
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
       setIsSavingName(false);
     }
@@ -76,13 +74,8 @@ export default function ProfilePage() {
     if (!user?.email) return;
     try {
       await sendPasswordResetEmail(user.auth, user.email);
-      toast({
-        title: 'Password Reset Email Sent',
-        description: 'Check your inbox for a link to reset your password.',
-      });
     } catch (error: any) {
       console.error('Error sending password reset email:', error);
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }
   };
 

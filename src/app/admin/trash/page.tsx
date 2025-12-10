@@ -31,27 +31,17 @@ import { formatDistanceToNow } from 'date-fns';
 
 function TrashedVideoCard({ video }: { video: Video }) {
     const firestore = useFirestore();
-    const { toast } = useToast();
 
     const handleRestore = () => {
         if (!firestore) return;
         const videoRef = doc(firestore, 'videos', video.id);
         updateDocumentNonBlocking(videoRef, { status: 'published', trashedAt: null });
-        toast({
-            title: 'Video Restored',
-            description: `"${video.title}" has been restored.`,
-        });
     };
 
     const handleDeleteForever = () => {
         if (!firestore) return;
         const videoRef = doc(firestore, 'videos', video.id);
         deleteDocumentNonBlocking(videoRef);
-        toast({
-            title: 'Video Permanently Deleted',
-            description: `"${video.title}" has been deleted forever.`,
-            variant: 'destructive'
-        });
     };
 
     const timeInTrash = video.trashedAt ? formatDistanceToNow(video.trashedAt.toDate(), { addSuffix: true }) : 'unknown';
