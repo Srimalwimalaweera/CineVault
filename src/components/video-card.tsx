@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
 import { Bookmark, ListPlus, ThumbsUp, Play, Download, Heart, Trash2 } from 'lucide-react';
 import type { Video } from '@/lib/types';
 import * as React from 'react';
@@ -53,7 +52,6 @@ type HeartAnimation = {
 
 export function VideoCard({ video, priority = false }: { video: Video, priority?: boolean }) {
   const { user, isAdmin } = useAuthContext();
-  const { toast } = useToast();
   const firestore = useFirestore();
 
   const [showReactions, setShowReactions] = React.useState(false);
@@ -136,7 +134,6 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
 
   const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction' | 'rating' | 'trash', value?: 'heart' | 'fire' | 'hot-face' | number) => {
     if (!user || !firestore) {
-      console.error("Login Required");
       return;
     }
     
@@ -194,7 +191,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         });
     }
 
-  }, [user, firestore, video.id, video.title, isFavorited, isAdmin]);
+  }, [user, firestore, video.id, isFavorited, isAdmin]);
 
     const handleWatchNowClick = React.useCallback(async (e: React.MouseEvent<HTMLAnchorElement>) => {
         if (!firestore) return;
@@ -303,7 +300,12 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       <Card className="w-full max-w-2xl mx-auto overflow-hidden transition-all duration-300 ease-in-out">
          <CardHeader className="p-4">
             <Link href={`/video/${video.id}`} className="group outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg">
-                <CardTitle className="font-headline text-lg group-hover:underline">{video.title}</CardTitle>
+                <CardTitle className={cn(
+                    "font-headline text-lg group-hover:underline",
+                    video.accessLevel === 'pro' && "text-gold animate-shimmer-gold bg-gradient-to-r from-gold via-yellow-200 to-gold bg-[length:200%_100%] bg-clip-text text-transparent"
+                )}>
+                    {video.title}
+                </CardTitle>
             </Link>
          </CardHeader>
         <div 

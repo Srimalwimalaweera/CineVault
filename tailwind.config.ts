@@ -25,6 +25,7 @@ export default {
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        gold: '#FFD700',
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
@@ -100,6 +101,10 @@ export default {
           from: { backgroundPosition: '200% 0' },
           to: { backgroundPosition: '-200% 0' },
         },
+        'shimmer-gold': {
+          '0%, 100%': { backgroundPosition: '200% center' },
+          '50%': { backgroundPosition: '-200% center' },
+        },
         'shimmer-brand': {
           '0%, 100%': { backgroundPosition: '200% center' },
           '50%': { backgroundPosition: '-200% center' },
@@ -118,6 +123,7 @@ export default {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'shimmer': 'shimmer 4s linear infinite',
+        'shimmer-gold': 'shimmer-gold 3s linear infinite',
         'shimmer-brand': 'shimmer-brand 8s linear infinite',
         'particle-flow': 'particle-flow 10s linear infinite',
         'heart-pop': 'heart-pop 1.5s cubic-bezier(0.21, 1.2, 0.81, 1) forwards',
