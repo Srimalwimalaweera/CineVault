@@ -37,11 +37,10 @@ const useClickDetection = (
       setClickCount(0);
     }, delay);
 
-    if (clickCount === 0) {
-      clearTimeout(timer);
+    // This is the key: clear the timer on each new click.
+    if (clickCount > 0) {
+      return () => clearTimeout(timer);
     }
-
-    return () => clearTimeout(timer);
   }, [clickCount, delay, onSingleClick, onDoubleClick, onTripleClick]);
 
   return () => setClickCount(prev => prev + 1);
@@ -56,6 +55,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const [showReactions, setShowReactions] = React.useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
   const [animations, setAnimations] = React.useState<{ heart: any; fire: any; hotFace: any; star: any; }>({ heart: null, fire: null, hotFace: null, star: null });
+  const [likeAnimation, setLikeAnimation] = React.useState<{ x: number; y: number; visible: boolean } | null>(null);
   const pressTimer = React.useRef<NodeJS.Timeout | null>(null);
 
   const userReactionRef = useMemoFirebase(() => {
@@ -258,6 +258,19 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       }
   };
 
+  const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    setLikeAnimation({ x, y, visible: true });
+    handleInteraction('reaction', 'heart');
+
+    setTimeout(() => {
+      setLikeAnimation(null);
+    }, 1500);
+  };
+
   const stats = [
     { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(reactions?.length || 0) },
     { icon: Download, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.downloadCount || 0) },
@@ -274,7 +287,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     if (reactionType && animations[reactionType]) {
         return <Lottie animationData={animations[reactionType]} loop={true} className="h-6 w-6" />;
     }
-    return <Heart className="h-6 w-6 text-white" />;
+    return <Heart className="h-6 w-6" />;
   };
 
   return (
@@ -287,7 +300,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
          </CardHeader>
         <div 
           className="group block outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
-          onClick={() => setIsLightboxOpen(true)}
+          onDoubleClick={handleDoubleClick}
         >
             <div className="relative w-full overflow-hidden rounded-b-lg max-h-[500px] bg-muted flex justify-center items-center">
                 <Image 
@@ -298,6 +311,14 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
                     priority={priority}
                     className="object-contain h-full w-full transition-transform duration-300 group-hover:scale-105" 
                 />
+                {likeAnimation?.visible && (
+                <div
+                    className="absolute pointer-events-none"
+                    style={{ left: likeAnimation.x, top: likeAnimation.y, transform: 'translate(-50%, -50%)' }}
+                >
+                    <Heart className="w-24 h-24 text-white fill-white animate-like-heart-grow" />
+                </div>
+                )}
             </div>
         </div>
         <div className="relative">
@@ -396,5 +417,3 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       </>
   );
 }
-
-    
