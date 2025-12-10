@@ -15,6 +15,8 @@ import { collection, serverTimestamp, doc, deleteDoc } from 'firebase/firestore'
 import { addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import Lottie from "lottie-react";
 import { cn } from '@/lib/utils';
+import { Rating } from '@/components/rating';
+import type { Rating as RatingType } from '@/lib/types';
 
 // Hook to detect single/double/triple clicks
 const useClickDetection = (
@@ -56,22 +58,6 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
   const [showReactions, setShowReactions] = React.useState(false);
   const [animations, setAnimations] = React.useState<{ heart: any; fire: any; hotFace: any; star: any; }>({ heart: null, fire: null, hotFace: null, star: null });
   const pressTimer = React.useRef<NodeJS.Timeout | null>(null);
-  const starLottieRef = React.useRef<any>(null);
-
-  React.useEffect(() => {
-    if (!animations.star || !starLottieRef.current) return;
-
-    const playAnimation = () => {
-      starLottieRef.current?.stop();
-      starLottieRef.current?.play();
-    };
-
-    const interval = setInterval(playAnimation, 2500);
-    playAnimation(); // Play once on mount
-
-    return () => clearInterval(interval);
-  }, [animations.star]);
-
 
   const userReactionRef = useMemoFirebase(() => {
     if (!firestore || !user || !video.id) return null;
@@ -82,9 +68,32 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     if (!firestore || !video.id) return null;
     return collection(firestore, `videos/${video.id}/reactions`);
   }, [firestore, video.id]);
+  
+  const videoRatingsRef = useMemoFirebase(() => {
+      if (!firestore || !video.id) return null;
+      return collection(firestore, `videos/${video.id}/ratings`);
+  }, [firestore, video.id]);
+
+  const userRatingRef = useMemoFirebase(() => {
+    if (!firestore || !user || !video.id) return null;
+    return doc(firestore, `videos/${video.id}/ratings`, user.uid);
+  }, [firestore, user, video.id]);
+
 
   const { data: userReaction } = useDoc<{type: 'heart' | 'fire' | 'hot-face'}>(userReactionRef);
   const { data: reactions } = useCollection(reactionsCollectionRef);
+  const { data: ratingsData } = useCollection<RatingType>(videoRatingsRef);
+  const { data: userRating } = useDoc<RatingType>(userRatingRef);
+
+
+  const averageRating = React.useMemo(() => {
+    if (!ratingsData || ratingsData.length === 0) {
+      return 0;
+    }
+    const total = ratingsData.reduce((acc, r) => acc + r.rating, 0);
+    return total / ratingsData.length;
+  }, [ratingsData]);
+
 
   React.useEffect(() => {
     const fetchAnimations = async () => {
@@ -107,25 +116,25 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     fetchAnimations();
   }, []);
 
-  const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction', reactionType?: 'heart' | 'fire' | 'hot-face') => {
+  const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction' | 'rating', value?: 'heart' | 'fire' | 'hot-face' | number) => {
     if (!user || !firestore) {
       toast({ title: "Login Required", description: `Please log in to interact.`, variant: "destructive" });
       return;
     }
     
-    if (type === 'reaction' && reactionType) {
+    if (type === 'reaction' && (value === 'heart' || value === 'fire' || value === 'hot-face')) {
         const reactionRef = doc(firestore, `videos/${video.id}/reactions`, user.uid);
         const newReaction = {
             userId: user.uid,
             videoId: video.id,
-            type: reactionType,
+            type: value,
             createdAt: serverTimestamp(),
         };
         setDocumentNonBlocking(reactionRef, newReaction, { merge: true });
         
         toast({ 
             title: "Reaction Added!",
-            description: `You reacted with ${reactionType} to "${video.title}".`
+            description: `You reacted with ${value} to "${video.title}".`
         });
         setShowReactions(false);
         return;
@@ -152,6 +161,22 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         });
         return;
     }
+    
+    if (type === 'rating' && typeof value === 'number') {
+        const ratingRef = doc(firestore, `videos/${video.id}/ratings`, user.uid);
+        const newRating = {
+            userId: user.uid,
+            videoId: video.id,
+            rating: value,
+            createdAt: serverTimestamp(),
+        };
+        setDocumentNonBlocking(ratingRef, newRating, { merge: true });
+        toast({
+            title: "Rating Submitted!",
+            description: `You rated "${video.title}" ${value} stars.`
+        });
+    }
+
   }, [user, firestore, video.id, video.title, toast]);
 
   const onSingleClick = React.useCallback(() => {
@@ -236,9 +261,13 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         <div className="relative">
              <CardContent className="p-2 pt-4 text-sm text-muted-foreground">
               <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1" title="Rating">
-                      {animations.star ? <Lottie lottieRef={starLottieRef} animationData={animations.star} loop={false} autoplay={false} className="h-4 w-4" speed={0.4} /> : <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
-                      <span className="font-semibold text-foreground">{video.ratings?.toFixed(1)}</span>
+                  <div className="flex items-center gap-2">
+                      <span className="font-medium">Rating</span>
+                       <Rating 
+                        currentRating={userRating?.rating || 0}
+                        averageRating={averageRating}
+                        onRating={(rating) => handleInteraction('rating', rating)}
+                      />
                   </div>
                   <div className="flex items-center gap-3">
                       {stats.map((stat, i) => (
@@ -307,3 +336,4 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       </Card>
   );
 }
+

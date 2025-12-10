@@ -1,3 +1,4 @@
+
 export type Video = {
   id: string;
   title: string;
@@ -9,4 +10,12 @@ export type Video = {
   reactionCount?: number;
   downloadCount?: number;
   viewCount?: number;
+};
+
+export type Rating = {
+    id: string;
+    userId: string;
+    videoId: string;
+    rating: number;
+    createdAt: any; // Typically a Firestore Timestamp
 };

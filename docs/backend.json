@@ -187,6 +187,34 @@
         }
       },
       "required": ["userId", "videoId", "type", "createdAt"]
+    },
+    "Rating": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Rating",
+      "type": "object",
+      "description": "Represents a user's rating for a video. The document ID is the userId.",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who gave the rating."
+        },
+        "videoId": {
+          "type": "string",
+          "description": "ID of the video that was rated."
+        },
+        "rating": {
+          "type": "number",
+          "description": "The rating value, from 1 to 5.",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the rating was created or updated.",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "videoId", "rating", "createdAt"]
     }
   },
   "auth": {
@@ -289,8 +317,28 @@
             }
           ]
         }
+      },
+      {
+        "path": "/videos/{videoId}/ratings/{userId}",
+        "definition": {
+          "entityName": "Rating",
+          "schema": {
+            "$ref": "#/backend/entities/Rating"
+          },
+          "description": "Stores a user's single rating for a specific video. The document ID is the user's UID.",
+          "params": [
+            {
+              "name": "videoId",
+              "description": "The ID of the video being rated."
+            },
+            {
+              "name": "userId",
+              "description": "The UID of the user who is giving the rating."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support the XVault platform, focusing on scalability, security, and ease of management.  The structure leverages path-based ownership for user-specific data (favorites, playlists) and a flat collection for videos. This design minimizes the need for complex security rules and `get()` calls, ensuring authorization independence. \n\n*   **Videos:** Videos are stored in a flat `/videos` collection.  This simplifies listing and querying videos. No denormalization is needed here as all videos have the same access control requirements (readable by all, writable only by admins - enforced via rules not structure).\n*   **Users:** A `/users` collection is introduced to store public profile information for each user. This allows for features like displaying user names or roles. Security rules ensure that users can only write to their own profile and cannot elevate their privileges.\n*   **Favorites:** Each user has a dedicated `/users/{userId}/favorites/{videoId}` subcollection. Using the `videoId` as the document ID provides an idempotent way to manage favorites, preventing duplicates.\n*   **Playlists:** Similar to favorites, playlists are stored in `/users/{userId}/playlists/{playlistId}`. This enforces path-based ownership and allows users to manage their playlists independently.\n*   **Reactions**: A user's reaction is stored in `/videos/{videoId}/reactions/{userId}`. Using the `userId` as the document ID ensures that each user can only have one reaction per video, simplifying the logic for creating or updating a reaction (upsert).\n\nThis structure avoids hierarchical authorization dependencies by storing user-specific data in path-based subcollections. Security rules can easily validate `request.auth.uid` against the `userId` parameter in the path. This promotes atomic operations and simplifies debugging."
+    "reasoning": "The Firestore data structure is designed to support the XVault platform, focusing on scalability, security, and ease of management. The structure leverages path-based ownership for user-specific data (favorites, playlists) and a flat collection for videos. This design minimizes the need for complex security rules and `get()` calls, ensuring authorization independence. \n\n*   **Videos:** Videos are stored in a flat `/videos` collection. This simplifies listing and querying videos. No denormalization is needed here as all videos have the same access control requirements (readable by all, writable only by admins - enforced via rules not structure).\n*   **Users:** A `/users` collection is introduced to store public profile information for each user. This allows for features like displaying user names or roles. Security rules ensure that users can only write to their own profile and cannot elevate their privileges.\n*   **Favorites:** Each user has a dedicated `/users/{userId}/favorites/{videoId}` subcollection. Using the `videoId` as the document ID provides an idempotent way to manage favorites, preventing duplicates.\n*   **Playlists:** Similar to favorites, playlists are stored in `/users/{userId}/playlists/{playlistId}`. This enforces path-based ownership and allows users to manage their playlists independently.\n*   **Reactions**: A user's reaction is stored in `/videos/{videoId}/reactions/{userId}`. Using the `userId` as the document ID ensures that each user can only have one reaction per video, simplifying the logic for creating or updating a reaction (upsert).\n*   **Ratings**: A user's rating is stored in `/videos/{videoId}/ratings/{userId}`. Using the `userId` as the document ID ensures that each user can only have one rating per video. Security rules will enforce that the rating value is between 1 and 5."
   }
 }

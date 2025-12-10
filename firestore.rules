@@ -10,13 +10,14 @@
  *    by anyone to allow for browsing. However, all modifications (create, update,
  *    delete) to this collection are restricted to administrative users.
  * 2. Strict User Ownership: All user-generated content (profiles, favorites,
- *    playlists, reactions) is stored in a path dedicated to that user or
+ *    playlists, reactions, ratings) is stored in a path dedicated to that user or
  *    validated against their UID. Access is strictly limited to the
  *    authenticated user who owns that data.
  *
  * Data Structure:
  * - /videos/{videoId}: Public video metadata.
  * - /videos/{videoId}/reactions/{userId}: User reactions to a video, one doc per user.
+ * - /videos/{videoId}/ratings/{userId}: User ratings for a video, one doc per user.
  * - /users/{userId}: Public user profiles.
  * - /users/{userId}/favorites/{favoriteId}: A user's private list of favorites.
  * - /users/{userId}/playlists/{playlistId}: A user's private video playlists.
@@ -62,6 +63,14 @@ service cloud.firestore {
       let isAlreadyAdmin = resource != null && resource.data.role == 'admin';
       return request.resource.data.role != 'admin' || isAlreadyAdmin;
     }
+    
+    /**
+     * Validates that a rating value is an integer between 1 and 5.
+     */
+    function isValidRating() {
+      let rating = request.resource.data.rating;
+      return rating is int && rating >= 1 && rating <= 5;
+    }
 
 
     // ----------------------------------------------------------------------
@@ -87,6 +96,17 @@ service cloud.firestore {
         // This covers the "upsert" logic of setDoc({ merge: true }).
         // The `isOwner` function checks if the authenticated user's ID matches the {userId} in the path.
         allow write, delete: if isOwner(userId);
+      }
+      
+      /**
+       * @description User ratings for a video. A user can only manage their own rating.
+       * @path /videos/{videoId}/ratings/{userId}
+       */
+      match /ratings/{userId} {
+        allow read: if true;
+        // Allow user to write/delete their own rating if the value is valid.
+        allow write: if isOwner(userId) && isValidRating();
+        allow delete: if isOwner(userId);
       }
     }
 
