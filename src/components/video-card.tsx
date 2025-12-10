@@ -11,14 +11,11 @@ import { Bookmark, ListPlus, Star, ThumbsUp, Download, Eye, Heart } from 'lucide
 import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore } from '@/firebase';
-import { collection, serverTimestamp } from 'firebase/firestore';
-import { addDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp, doc } from 'firebase/firestore';
+import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import Lottie from "lottie-react";
 
-interface VideoCardProps {
-  video: Video;
-  priority?: boolean;
-}
-
+// Hook to detect single/double/triple clicks
 const useClickDetection = (
   onSingleClick: () => void,
   onDoubleClick: () => void,
@@ -53,42 +50,77 @@ export function VideoCard({ video, priority = false }: VideoCardProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
 
+  const [showReactions, setShowReactions] = React.useState(false);
+  const [animations, setAnimations] = React.useState({ heart: null, fire: null, hotFace: null });
+  const pressTimer = React.useRef<NodeJS.Timeout | null>(null);
+
+  React.useEffect(() => {
+    const fetchAnimations = async () => {
+      try {
+        const [heartRes, fireRes, hotFaceRes] = await Promise.all([
+          fetch('https://fonts.gstatic.com/s/e/notoemoji/latest/2764_fe0f/lottie.json'),
+          fetch('https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/lottie.json'),
+          fetch('https://fonts.gstatic.com/s/e/notoemoji/latest/1f975/lottie.json')
+        ]);
+        const heart = await heartRes.json();
+        const fire = await fireRes.json();
+        const hotFace = await hotFaceRes.json();
+        setAnimations({ heart, fire, hotFace });
+      } catch (error) {
+        console.error("Failed to load Lottie animations", error);
+      }
+    };
+    fetchAnimations();
+  }, []);
+
   const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction', reactionType?: 'heart' | 'fire' | 'hot-face') => {
-    
     if (!user || !firestore) {
       toast({ title: "Login Required", description: `Please log in to interact.`, variant: "destructive" });
       return;
     }
     
-    if (type === 'reaction') {
-        const reactionsCollection = collection(firestore, `videos/${video.id}/reactions`);
+    if (type === 'reaction' && reactionType) {
+        // Use user's UID as the document ID for their reaction on this video
+        const reactionRef = doc(firestore, `videos/${video.id}/reactions`, user.uid);
         const newReaction = {
             userId: user.uid,
             videoId: video.id,
             type: reactionType,
             createdAt: serverTimestamp(),
         };
-        addDocumentNonBlocking(reactionsCollection, newReaction);
+        // Use setDoc with merge to create or update the user's reaction
+        setDocumentNonBlocking(reactionRef, newReaction, { merge: true });
+        
         toast({ 
             title: "Reaction Added!",
             description: `You reacted with ${reactionType} to "${video.title}".`
         });
+        setShowReactions(false); // Close the panel after selection
         return;
     }
 
-    const collectionName = type === 'favorite' ? 'favorites' : 'playlists';
-    const collectionRef = collection(firestore, `users/${user.uid}/${collectionName}`);
+    if (type === 'favorite') {
+        const favRef = doc(firestore, `users/${user.uid}/favorites`, video.id);
+        const favData = { videoId: video.id, userId: user.uid, createdAt: serverTimestamp() };
+        setDocumentNonBlocking(favRef, favData, { merge: true });
+        toast({ 
+            title: "Added to Favorites",
+            description: `"${video.title}" has been added.`
+        });
+        return;
+    }
     
-    const data = type === 'favorite' 
-        ? { videoId: video.id, userId: user.uid }
-        : { name: 'My Playlist', videoIds: [video.id], userId: user.uid };
-
-    addDocumentNonBlocking(collectionRef, data);
-    
-    toast({ 
-        title: type === 'favorite' ? "Added to Favorites" : "Added to Playlist",
-        description: `"${video.title}" has been added.`
-    });
+    if (type === 'playlist') {
+        // For simplicity, we add to a default playlist. A real app would let user choose.
+        const collectionRef = collection(firestore, `users/${user.uid}/playlists`);
+        const data = { name: 'My Playlist', videoIds: [video.id], userId: user.uid };
+        addDocumentNonBlocking(collectionRef, data);
+        toast({ 
+            title: "Added to Playlist",
+            description: `"${video.title}" has been added.`
+        });
+        return;
+    }
   }, [user, firestore, video.id, video.title, toast]);
 
   const onSingleClick = React.useCallback(() => handleInteraction('reaction', 'heart'), [handleInteraction]);
@@ -96,12 +128,41 @@ export function VideoCard({ video, priority = false }: VideoCardProps) {
   const onTripleClick = React.useCallback(() => handleInteraction('reaction', 'hot-face'), [handleInteraction]);
 
   const handleClicks = useClickDetection(onSingleClick, onDoubleClick, onTripleClick);
+  
+  const handlePressStart = () => {
+    pressTimer.current = setTimeout(() => {
+      setShowReactions(true);
+    }, 500); // 500ms for long press
+  };
+
+  const handlePressEnd = () => {
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  };
+
+  const handleButtonClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // This will only fire if it's a short click (long press timer cleared)
+      if (!showReactions) {
+          handleClicks();
+      }
+  };
+
 
   const stats = [
     { icon: ThumbsUp, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.reactionCount || 0) },
     { icon: Eye, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.viewCount || 0) },
     { icon: Download, value: Intl.NumberFormat('en-US', { notation: 'compact' }).format(video.downloadCount || 0) },
   ];
+  
+  const reactionEmojis = [
+    { type: 'fire', animation: animations.fire, rotation: '-rotate-45' },
+    { type: 'heart', animation: animations.heart, rotation: 'translate-y-[-10px]' },
+    { type: 'hot-face', animation: animations.hotFace, rotation: 'rotate-45' },
+  ] as const;
 
   return (
       <Card className="w-full max-w-2xl mx-auto overflow-hidden transition-all duration-300 ease-in-out">
@@ -149,16 +210,32 @@ export function VideoCard({ video, priority = false }: VideoCardProps) {
                     Add to list
                 </Button>
             </CardFooter>
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div 
+              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            >
                 <div className="relative flex flex-col items-center gap-1">
+                    {showReactions && (
+                      <div className="absolute bottom-full mb-2 flex justify-center items-end gap-2">
+                        {reactionEmojis.map((emoji) => (
+                          <div
+                            key={emoji.type}
+                            onClick={() => handleInteraction('reaction', emoji.type)}
+                            className={`cursor-pointer transition-all duration-300 ease-out w-12 h-12 hover:scale-125 ${showReactions ? `scale-100 opacity-100 transform ${emoji.rotation}` : 'scale-0 opacity-0'}`}
+                          >
+                            {emoji.animation && <Lottie animationData={emoji.animation} loop={true} />}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <Button 
                         size="icon" 
                         className="rounded-full h-12 w-12 shadow-lg" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleClicks();
-                        }}
+                        onMouseDown={handlePressStart}
+                        onMouseUp={handlePressEnd}
+                        onTouchStart={handlePressStart}
+                        onTouchEnd={handlePressEnd}
+                        onClick={handleButtonClick}
+                        onContextMenu={(e) => e.preventDefault()} // Prevents context menu on long press
                         aria-label="Add reaction"
                     >
                         <Heart className="h-6 w-6" />

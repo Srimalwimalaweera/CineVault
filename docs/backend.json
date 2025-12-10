@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Video": {
@@ -105,12 +106,8 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Favorite",
       "type": "object",
-      "description": "Represents a video added to a user's favorites.",
+      "description": "Represents a video added to a user's favorites. The document ID is the videoId.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Favorite entity."
-        },
         "userId": {
           "type": "string",
           "description": "Reference to User. (Relationship: User 1:N Favorite)"
@@ -118,12 +115,17 @@
         "videoId": {
           "type": "string",
           "description": "Reference to Video. (Relationship: Video 1:N Favorite)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the favorite was added.",
+          "format": "date-time"
         }
       },
       "required": [
-        "id",
         "userId",
-        "videoId"
+        "videoId",
+        "createdAt"
       ]
     },
     "Playlist": {
@@ -163,12 +165,8 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Reaction",
       "type": "object",
-      "description": "Represents a user's reaction to a video.",
+      "description": "Represents a user's reaction to a video. The document ID is the userId.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Reaction."
-        },
         "userId": {
           "type": "string",
           "description": "ID of the user who reacted."
@@ -188,7 +186,7 @@
           "format": "date-time"
         }
       },
-      "required": ["id", "userId", "videoId", "type", "createdAt"]
+      "required": ["userId", "videoId", "type", "createdAt"]
     }
   },
   "auth": {
@@ -233,21 +231,21 @@
         }
       },
       {
-        "path": "/users/{userId}/favorites/{favoriteId}",
+        "path": "/users/{userId}/favorites/{videoId}",
         "definition": {
           "entityName": "Favorite",
           "schema": {
             "$ref": "#/backend/entities/Favorite"
           },
-          "description": "Stores a user's favorite videos.  Path-based ownership enforced by {userId}.  No denormalized fields needed.",
+          "description": "Stores a user's favorite videos. Path-based ownership enforced by {userId}. The document ID is the videoId.",
           "params": [
             {
               "name": "userId",
               "description": "Unique identifier for the user."
             },
             {
-              "name": "favoriteId",
-              "description": "Unique identifier for the favorite video entry."
+              "name": "videoId",
+              "description": "The ID of the video being favorited."
             }
           ]
         }
@@ -273,28 +271,26 @@
         }
       },
       {
-        "path": "/videos/{videoId}/reactions/{reactionId}",
+        "path": "/videos/{videoId}/reactions/{userId}",
         "definition": {
           "entityName": "Reaction",
           "schema": {
             "$ref": "#/backend/entities/Reaction"
           },
-          "description": "Stores user reactions to a specific video. Users can only create their own reactions.",
+          "description": "Stores a user's single reaction to a specific video. The document ID is the user's UID.",
           "params": [
             {
               "name": "videoId",
               "description": "The ID of the video being reacted to."
             },
             {
-              "name": "reactionId",
-              "description": "Unique identifier for the reaction."
+              "name": "userId",
+              "description": "The UID of the user who is reacting."
             }
           ]
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support the XVault platform, focusing on scalability, security, and ease of management.  The structure leverages path-based ownership for user-specific data (favorites, playlists) and a flat collection for videos.  This design minimizes the need for complex security rules and `get()` calls, ensuring authorization independence. \n\n*   **Videos:** Videos are stored in a flat `/videos` collection.  This simplifies listing and querying videos. No denormalization is needed here as all videos have the same access control requirements (readable by all, writable only by admins - enforced via rules not structure).\n*   **Users:** A `/users` collection is introduced to store public profile information for each user. This allows for features like displaying user names or roles. Security rules ensure that users can only write to their own profile and cannot elevate their privileges.\n*   **Favorites:** Each user has a dedicated `/users/{userId}/favorites/{favoriteId}` subcollection for their favorite videos. This structure enforces path-based ownership. This enables QAPs because listing favorites is scoped to the user's subcollection.\n*   **Playlists:** Similar to favorites, playlists are stored in `/users/{userId}/playlists/{playlistId}`. This enforces path-based ownership and allows users to manage their playlists independently.  It also enables QAPs as listing playlists is scoped to the user's subcollection.\n\nThis structure avoids hierarchical authorization dependencies by storing user-specific data in path-based subcollections. Security rules can easily validate `request.auth.uid` against the `userId` parameter in the path. This promotes atomic operations and simplifies debugging."
+    "reasoning": "The Firestore data structure is designed to support the XVault platform, focusing on scalability, security, and ease of management.  The structure leverages path-based ownership for user-specific data (favorites, playlists) and a flat collection for videos. This design minimizes the need for complex security rules and `get()` calls, ensuring authorization independence. \n\n*   **Videos:** Videos are stored in a flat `/videos` collection.  This simplifies listing and querying videos. No denormalization is needed here as all videos have the same access control requirements (readable by all, writable only by admins - enforced via rules not structure).\n*   **Users:** A `/users` collection is introduced to store public profile information for each user. This allows for features like displaying user names or roles. Security rules ensure that users can only write to their own profile and cannot elevate their privileges.\n*   **Favorites:** Each user has a dedicated `/users/{userId}/favorites/{videoId}` subcollection. Using the `videoId` as the document ID provides an idempotent way to manage favorites, preventing duplicates.\n*   **Playlists:** Similar to favorites, playlists are stored in `/users/{userId}/playlists/{playlistId}`. This enforces path-based ownership and allows users to manage their playlists independently.\n*   **Reactions**: A user's reaction is stored in `/videos/{videoId}/reactions/{userId}`. Using the `userId` as the document ID ensures that each user can only have one reaction per video, simplifying the logic for creating or updating a reaction (upsert).\n\nThis structure avoids hierarchical authorization dependencies by storing user-specific data in path-based subcollections. Security rules can easily validate `request.auth.uid` against the `userId` parameter in the path. This promotes atomic operations and simplifies debugging."
   }
 }
-
-    

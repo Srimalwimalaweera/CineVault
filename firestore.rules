@@ -16,7 +16,7 @@
  *
  * Data Structure:
  * - /videos/{videoId}: Public video metadata.
- * - /videos/{videoId}/reactions/{reactionId}: User reactions to a video.
+ * - /videos/{videoId}/reactions/{userId}: User reactions to a video, one doc per user.
  * - /users/{userId}: Public user profiles.
  * - /users/{userId}/favorites/{favoriteId}: A user's private list of favorites.
  * - /users/{userId}/playlists/{playlistId}: A user's private video playlists.
@@ -77,15 +77,14 @@ service cloud.firestore {
       allow write: if isDbAdmin();
       
       /**
-       * @description User reactions to a video. Rules for the subcollection.
-       * @path /videos/{videoId}/reactions/{reactionId}
+       * @description User reactions to a video. A user can only manage their own reaction.
+       * @path /videos/{videoId}/reactions/{userId}
        */
-      match /reactions/{reactionId} {
+      match /reactions/{userId} {
         allow read: if true;
-        // Allow any signed-in user to create a reaction if the data's userId matches their own.
-        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-        // Allow the owner of a reaction to update or delete it.
-        allow update, delete: if isOwner(resource.data.userId);
+        // A user can create, update or delete their own reaction document.
+        // The document ID must match their user ID.
+        allow write: if isOwner(userId);
       }
     }
 
@@ -102,9 +101,9 @@ service cloud.firestore {
       
       /**
        * @description A user's private collection of favorite videos.
-       * @path /users/{userId}/favorites/{favoriteId}
+       * @path /users/{userId}/favorites/{videoId}
        */
-      match /favorites/{favoriteId} {
+      match /favorites/{videoId} {
         allow read, write: if isOwner(userId);
       }
   
