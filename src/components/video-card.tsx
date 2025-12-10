@@ -61,7 +61,7 @@ export function VideoCard({ video }: VideoCardProps) {
             </Link>
          </CardHeader>
         <Link href={`/video/${video.id}`} className="group block outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-            <div className="relative max-h-[600px] w-full overflow-hidden">
+            <div className="relative max-h-[500px] w-full overflow-hidden">
                 <Image 
                     src={video.thumbnailUrl} 
                     alt={video.title} 
