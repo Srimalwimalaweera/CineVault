@@ -301,7 +301,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
          <CardHeader className="p-4">
             <Link href={`/video/${video.id}`} className="group outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg">
                 <CardTitle className={cn(
-                    "font-headline text-lg group-hover:underline",
+                    "font-headline text-xl group-hover:underline",
                     video.accessLevel === 'pro' && "text-gold animate-shimmer-gold bg-gradient-to-r from-gold via-yellow-200 to-gold bg-[length:200%_100%] bg-clip-text text-transparent"
                 )}>
                     {video.title}
