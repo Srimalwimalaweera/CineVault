@@ -91,9 +91,8 @@ service cloud.firestore {
        */
       match /reactions/{reactionId} {
         allow read: if true;
-        // Allow create if user is signed in and the reaction userId matches their own.
         allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-        allow update, delete: if false; // Reactions are immutable.
+        allow update, delete: if isOwner(resource.data.userId);
       }
     }
 
@@ -127,5 +126,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
