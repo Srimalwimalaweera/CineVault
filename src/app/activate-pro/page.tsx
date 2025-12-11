@@ -1,0 +1,369 @@
+'use client';
+
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useAuthContext } from '@/hooks/use-auth';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, serverTimestamp, addDoc, collection, setDoc } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase';
+import { Header } from '@/components/layout/header';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CreditCard, ArrowLeft, PlusCircle, XCircle, Loader2, Database } from 'lucide-react';
+import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from "@/components/ui/progress";
+import { cn } from '@/lib/utils';
+
+const TOTAL_PAYMENT_AMOUNT = 950;
+
+type ServiceProvider = {
+  name: string;
+  status: 'allow' | 'deny';
+  amounts: number[];
+};
+
+type Settings = {
+  providers: ServiceProvider[];
+};
+
+type CardInput = {
+  id: number;
+  provider: string;
+  amount: string;
+  pin: string;
+};
+
+export default function SamplePage() {
+  const { user, isUserLoading } = useAuthContext();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [cardInputs, setCardInputs] = useState<CardInput[]>([{ id: 1, provider: '', amount: '', pin: '' }]);
+  const [isProgressBarSticky, setIsProgressBarSticky] = useState(false);
+  
+  const progressBarContainerRef = useRef<HTMLDivElement>(null);
+  const stickyProgressBarContainerRef = useRef<HTMLDivElement>(null);
+
+
+  const settingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'settings', 'serviceProviders');
+  }, [firestore]);
+
+  const { data: settings, isLoading: isLoadingSettings } = useDoc<Settings>(settingsRef);
+  
+  const allowedProviders = useMemo(() => {
+    return settings?.providers.filter(p => p.status === 'allow') || [];
+  }, [settings]);
+
+  const totalEnteredAmount = useMemo(() => {
+    return cardInputs.reduce((acc, card) => acc + (Number(card.amount) || 0), 0);
+  }, [cardInputs]);
+  
+  const remainingAmount = TOTAL_PAYMENT_AMOUNT - totalEnteredAmount;
+  const isPaymentComplete = totalEnteredAmount >= TOTAL_PAYMENT_AMOUNT;
+  const progressValue = (totalEnteredAmount / TOTAL_PAYMENT_AMOUNT) * 100;
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (progressBarContainerRef.current) {
+        const { top } = progressBarContainerRef.current.getBoundingClientRect();
+        // The header height is 64px (h-16)
+        if (top <= 64) {
+          setIsProgressBarSticky(true);
+        } else {
+          setIsProgressBarSticky(false);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Automatically add a new card input if the last one is filled and payment is not complete
+    if (cardInputs.length > 0 && !isPaymentComplete) {
+      const lastCard = cardInputs[cardInputs.length - 1];
+      if (lastCard.provider && lastCard.amount && lastCard.pin) {
+        setCardInputs(prev => [...prev, { id: Date.now(), provider: '', amount: '', pin: '' }]);
+      }
+    }
+  }, [cardInputs, isPaymentComplete]);
+
+  const handleCardChange = (id: number, field: keyof Omit<CardInput, 'id'>, value: string) => {
+    setCardInputs(prev =>
+      prev.map(card => {
+        if (card.id === id) {
+          let finalValue = value;
+          if (field === 'pin') {
+            // Allow only numeric characters for the PIN
+            finalValue = value.replace(/\D/g, '');
+          }
+          return { ...card, [field]: finalValue };
+        }
+        return card;
+      })
+    );
+  };
+  
+  const removeCardInput = (id: number) => {
+    if (cardInputs.length > 1) {
+      setCardInputs(prev => prev.filter(card => card.id !== id));
+    }
+  };
+
+  const getProviderAmounts = (providerName: string): number[] => {
+    const provider = allowedProviders.find(p => p.name === providerName);
+    return provider?.amounts || [];
+  };
+
+  const seedServiceProviders = async () => {
+    if (!firestore) return;
+    const settingsDocRef = doc(firestore, 'settings', 'serviceProviders');
+    const dummyData = {
+      providers: [
+        { name: 'Dialog', status: 'allow', amounts: [50, 100, 200, 500] },
+        { name: 'Mobitel', status: 'allow', amounts: [50, 100, 250, 500] },
+        { name: 'Hutch', status: 'allow', amounts: [50, 100, 150] },
+        { name: 'Airtel', status: 'allow', amounts: [50, 100] },
+        { name: 'UnpopularCom', status: 'deny', amounts: [20, 40] },
+      ]
+    };
+    try {
+      await setDoc(settingsDocRef, dummyData);
+      toast({
+        title: 'Database Seeded',
+        description: 'Service provider data has been added to Firestore.',
+      });
+    } catch(error) {
+      console.error('Error seeding data:', error);
+      toast({
+        title: 'Seeding Failed',
+        description: 'Could not write data to Firestore. Check console for errors.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!user || !firestore || !isPaymentComplete) {
+      toast({
+        title: 'Incomplete Payment',
+        description: `Please add cards to meet the total of LKR ${TOTAL_PAYMENT_AMOUNT}.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const paymentData = {
+        userId: user.uid,
+        totalAmount: totalEnteredAmount,
+        status: 'pending',
+        createdAt: serverTimestamp(),
+        cards: cardInputs
+          .filter(c => c.provider && c.amount && c.pin) // Only submit filled cards
+          .map(({ provider, amount, pin }) => ({ provider, amount: Number(amount), pin })),
+      };
+
+      await addDocumentNonBlocking(collection(firestore, 'payments'), paymentData);
+
+      toast({
+        title: 'Payment Submitted',
+        description: 'Your payment is being processed. You will be notified shortly.',
+      });
+      // Optionally reset form or redirect user
+      setCardInputs([{ id: 1, provider: '', amount: '', pin: '' }]);
+
+    } catch (error) {
+      console.error('Payment submission failed', error);
+      toast({
+        title: 'Submission Failed',
+        description: 'There was an error submitting your payment. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const ProgressBarSection = ({ isSticky = false } : { isSticky?: boolean }) => (
+    <div className="space-y-2">
+      <div className='flex justify-between items-center text-sm'>
+        <span className='font-medium'>Amount Paid: LKR {totalEnteredAmount.toFixed(2)}</span>
+        <span className={cn(isSticky ? 'text-foreground' : 'text-muted-foreground')}>
+          Remaining: LKR {(remainingAmount > 0 ? remainingAmount : 0).toFixed(2)}
+        </span>
+      </div>
+      <Progress value={progressValue} />
+    </div>
+  );
+
+  const renderContent = () => {
+    if (isLoadingSettings || isUserLoading) {
+      return <Skeleton className="h-64 w-full" />;
+    }
+
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>One-Time Pro Plan Payment</CardTitle>
+              <CardDescription>
+                Use mobile recharge cards to pay the total amount of 
+                <span className="font-bold text-foreground"> LKR {TOTAL_PAYMENT_AMOUNT.toFixed(2)}</span>.
+              </CardDescription>
+            </div>
+            {!settings && (
+              <Button variant="outline" onClick={seedServiceProviders}>
+                <Database className="mr-2 h-4 w-4" /> Seed Data
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div ref={progressBarContainerRef} className="h-12">
+            {!isProgressBarSticky && <ProgressBarSection />}
+          </div>
+          
+          <div className="space-y-4">
+            {cardInputs.map((card, index) => (
+              <div key={card.id} className="grid grid-cols-1 sm:grid-cols-[1fr,1fr,2fr,auto] gap-2 items-end p-3 border rounded-lg bg-background">
+                <div className='flex flex-col gap-1.5'>
+                  {index === 0 && <Label className='text-xs text-muted-foreground'>Provider</Label>}
+                  <Select
+                    value={card.provider}
+                    onValueChange={(value) => handleCardChange(card.id, 'provider', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allowedProviders.map(p => (
+                        <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className='flex flex-col gap-1.5'>
+                  {index === 0 && <Label className='text-xs text-muted-foreground'>Amount</Label>}
+                   <Select
+                    value={card.amount}
+                    onValueChange={(value) => handleCardChange(card.id, 'amount', value)}
+                    disabled={!card.provider}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="LKR" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getProviderAmounts(card.provider).map(amount => (
+                          <SelectItem key={amount} value={String(amount)}>LKR {amount}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className='flex flex-col gap-1.5'>
+                  {index === 0 && <Label className='text-xs text-muted-foreground'>Scratch Card PIN</Label>}
+                  <Input
+                    placeholder="Enter PIN"
+                    value={card.pin}
+                    onChange={(e) => handleCardChange(card.id, 'pin', e.target.value)}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                  />
+                </div>
+                
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => removeCardInput(card.id)} 
+                    disabled={cardInputs.length === 1}
+                    className="text-muted-foreground hover:text-destructive"
+                    aria-label="Remove card"
+                >
+                  <XCircle className="h-5 w-5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+           { !isPaymentComplete && (
+            <div className="text-center">
+              <Button 
+                variant="outline"
+                onClick={() => setCardInputs(prev => [...prev, { id: Date.now(), provider: '', amount: '', pin: '' }])}
+              >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Another Card
+              </Button>
+            </div>
+           )}
+        </CardContent>
+        <CardFooter className="flex-col gap-4">
+          <Button 
+            className="w-full"
+            onClick={handleSubmit} 
+            disabled={!isPaymentComplete || isSubmitting}
+          >
+            {isSubmitting ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</>
+            ) : (
+              `Submit Payment (LKR ${totalEnteredAmount.toFixed(2)})`
+            )}
+          </Button>
+          <p className="text-xs text-muted-foreground text-center">
+            By clicking "Submit", you agree to our terms of service. The Pro plan will be activated upon successful validation of the recharge cards.
+          </p>
+        </CardFooter>
+      </Card>
+    );
+  };
+  
+  return (
+    <div className="flex min-h-screen flex-col">
+      <Header />
+       {/* Sticky Progress Bar */}
+      <div 
+        ref={stickyProgressBarContainerRef}
+        className={cn(
+          'fixed top-16 left-0 right-0 z-40 bg-background/80 backdrop-blur-lg border-b p-4 transition-transform duration-300 ease-in-out',
+          isProgressBarSticky ? 'translate-y-0' : '-translate-y-full'
+        )}
+      >
+        <div className='container max-w-2xl'>
+            <ProgressBarSection isSticky={true} />
+        </div>
+      </div>
+      <main className="flex-1 bg-muted/20">
+        <div className="container max-w-2xl py-12">
+          <div className="mb-8 flex items-center gap-4">
+            <Button variant="outline" size="icon" asChild>
+              <Link href="/pro">
+                <ArrowLeft />
+                <span className="sr-only">Back to Pro Page</span>
+              </Link>
+            </Button>
+            <h1 className="font-headline text-3xl font-bold flex items-center gap-2">
+              <CreditCard/> Secure Payment
+            </h1>
+          </div>
+          {renderContent()}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+    

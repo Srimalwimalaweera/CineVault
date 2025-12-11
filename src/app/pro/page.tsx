@@ -83,7 +83,7 @@ export default function ProPage() {
           
           <div className='mt-12'>
             <Button size="lg" asChild className="w-full max-w-xs font-bold text-lg py-7 bg-gold text-black hover:bg-gold/90 animate-shimmer-gold bg-gradient-to-r from-gold via-yellow-100 to-gold bg-[length:200%_100%]">
-                <Link href="/sample">
+                <Link href="/activate-pro">
                     <BadgeCheck className="mr-2 h-6 w-6" />
                     Upgrade Now
                 </Link>
