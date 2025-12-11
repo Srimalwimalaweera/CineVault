@@ -147,7 +147,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
 
   const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction' | 'rating' | 'trash', value?: 'heart' | 'fire' | 'hot-face' | number) => {
     if (!user || !firestore) {
-       showNotification("Login Required");
+      setTimeout(() => showNotification("Login Required"), 0);
       return;
     }
     
@@ -160,7 +160,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
             createdAt: serverTimestamp(),
         };
         setDocumentNonBlocking(reactionRef, newReaction, { merge: true });
-        showNotification(`${value.charAt(0).toUpperCase() + value.slice(1)} Reaction Added`);
+        setTimeout(() => showNotification(`${value.charAt(0).toUpperCase() + value.slice(1)} Reaction Added`), 0);
         
         if (value === 'heart' && !likedInSession.current) {
           likedInSession.current = true; // Mark as liked for this session
@@ -174,11 +174,11 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         const favRef = doc(firestore, `users/${user.uid}/favorites`, video.id);
         if (isFavorited) {
           deleteDocumentNonBlocking(favRef);
-          showNotification("Removed from Favorites");
+          setTimeout(() => showNotification("Removed from Favorites"), 0);
         } else {
           const favData = { videoId: video.id, userId: user.uid, createdAt: serverTimestamp() };
           setDocumentNonBlocking(favRef, favData, { merge: true });
-          showNotification("Added to Favorites");
+          setTimeout(() => showNotification("Added to Favorites"), 0);
         }
         return;
     }
@@ -197,7 +197,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
             createdAt: serverTimestamp(),
         };
         setDocumentNonBlocking(ratingRef, newRating, { merge: true });
-        showNotification(`You rated ${value} stars`);
+        setTimeout(() => showNotification(`You rated ${value} stars`), 0);
     }
 
     if (type === 'trash') {
@@ -207,7 +207,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
             status: 'trashed',
             trashedAt: serverTimestamp()
         });
-        showNotification("Video moved to trash");
+        setTimeout(() => showNotification("Video moved to trash"), 0);
     }
 
   }, [user, firestore, video.id, isFavorited, isAdmin, showNotification]);
@@ -289,7 +289,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         if (userReaction) {
           if (userReactionRef) {
             deleteDocumentNonBlocking(userReactionRef);
-            showNotification("Reaction Removed");
+            setTimeout(() => showNotification("Reaction Removed"), 0);
           }
         } else {
           handleInteraction('reaction', 'heart');
@@ -467,3 +467,5 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       </>
   );
 }
+
+    
