@@ -1,12 +1,16 @@
 
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Crown, Zap, Video, Star, BadgeCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import Link from 'next/link';
+import Lottie from 'lottie-react';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 const proFeatures = [
   {
@@ -28,13 +32,32 @@ const proFeatures = [
 
 
 export default function ProPage() {
+  const [crownAnimation, setCrownAnimation] = useState(null);
+
+  useEffect(() => {
+    const fetchAnimation = async () => {
+        try {
+            const res = await fetch('https://fonts.gstatic.com/s/e/notoemoji/latest/1f451/lottie.json');
+            const animationData = await res.json();
+            setCrownAnimation(animationData);
+        } catch (error) {
+            console.error("Failed to load crown animation", error);
+        }
+    };
+    fetchAnimation();
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1 bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white">
         <div className="container max-w-2xl py-12 text-center">
-            <div className="mb-8 inline-block rounded-full bg-gold/10 p-4 border border-gold/30">
-              <Crown className="h-12 w-12 text-gold animate-shimmer-gold bg-gradient-to-r from-gold via-yellow-200 to-gold bg-[length:200%_100%] bg-clip-text text-transparent" />
+            <div className="mb-8 inline-block rounded-full bg-gold/10 p-3 border border-gold/30">
+              {crownAnimation ? (
+                <Lottie animationData={crownAnimation} loop={true} className="h-16 w-16" />
+              ) : (
+                <Skeleton className="h-16 w-16 rounded-full" />
+              )}
           </div>
           <h1 className="font-headline text-4xl font-bold tracking-tight sm:text-5xl">
             Unlock XVault Pro
