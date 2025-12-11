@@ -4,12 +4,12 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
-import { Crown, Zap, Video, Star, BadgeCheck } from 'lucide-react';
+import { Crown, Zap, Video, Star, BadgeCheck, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import Link from 'next/link';
 import Lottie from 'lottie-react';
 import { Skeleton } from '@/components/ui/skeleton';
-
+import { useAuthContext } from '@/hooks/use-auth';
 
 const proFeatures = [
   {
@@ -32,6 +32,7 @@ const proFeatures = [
 
 export default function ProPage() {
   const [crownAnimation, setCrownAnimation] = useState(null);
+  const { user, isUserLoading } = useAuthContext(); // Assuming role is managed here
 
   useEffect(() => {
     const fetchAnimation = async () => {
@@ -46,6 +47,53 @@ export default function ProPage() {
     fetchAnimation();
   }, []);
 
+  const renderContent = () => {
+      if (isUserLoading) {
+          return <Skeleton className='w-full h-48' />;
+      }
+
+      if (user?.role === 'pro' || user?.role === 'admin') {
+          return (
+            <Card className="text-center bg-black/20 border-gold/50">
+                <CardHeader>
+                    <CardTitle className="flex items-center justify-center gap-2 text-gold font-headline">
+                        <ShieldCheck /> You are a Pro Member!
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-white/80">
+                        You already have access to all exclusive Pro features. Enjoy the experience!
+                    </p>
+                </CardContent>
+                <CardFooter>
+                    <Button asChild className="mx-auto" variant="outline">
+                        <Link href="/latest?filter=pro">Browse Pro Content</Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+          )
+      }
+
+      return (
+        <>
+            <h1 className="font-headline text-4xl font-bold tracking-tight sm:text-5xl">
+                Unlock XVault Pro
+            </h1>
+            <p className="mt-6 text-lg leading-8 text-white/70">
+                Upgrade your experience and get access to all premium features.
+            </p>
+            <div className='mt-12'>
+                <Button size="lg" asChild className="w-full max-w-xs font-bold text-lg py-7 bg-gold text-black hover:bg-gold/90 animate-shimmer-gold bg-gradient-to-r from-gold via-yellow-100 to-gold bg-[length:200%_100%]">
+                    <Link href="/activate-pro">
+                        <BadgeCheck className="mr-2 h-6 w-6" />
+                        Upgrade Now
+                    </Link>
+                </Button>
+            </div>
+        </>
+      )
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -58,12 +106,7 @@ export default function ProPage() {
                 <Skeleton className="h-16 w-16 rounded-full" />
               )}
           </div>
-          <h1 className="font-headline text-4xl font-bold tracking-tight sm:text-5xl">
-            Unlock XVault Pro
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-white/70">
-            Upgrade your experience and get access to all premium features.
-          </p>
+          {renderContent()}
 
            <div className="mt-12 text-left">
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
@@ -80,17 +123,10 @@ export default function ProPage() {
               ))}
             </div>
           </div>
-          
-          <div className='mt-12'>
-            <Button size="lg" asChild className="w-full max-w-xs font-bold text-lg py-7 bg-gold text-black hover:bg-gold/90 animate-shimmer-gold bg-gradient-to-r from-gold via-yellow-100 to-gold bg-[length:200%_100%]">
-                <Link href="/activate-pro">
-                    <BadgeCheck className="mr-2 h-6 w-6" />
-                    Upgrade Now
-                </Link>
-            </Button>
-          </div>
         </div>
       </main>
     </div>
   );
 }
+
+    

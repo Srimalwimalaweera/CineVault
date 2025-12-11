@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -11,15 +12,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreditCard, ArrowLeft, PlusCircle, XCircle, Loader2, Database } from 'lucide-react';
+import { CreditCard, ArrowLeft, PlusCircle, XCircle, Loader2, Database, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from "@/components/ui/progress";
 import { cn } from '@/lib/utils';
 import { useNotification } from '@/hooks/use-notification';
+import type { UserProfile } from '@/lib/types';
 
 const TOTAL_PAYMENT_AMOUNT = 950;
+const REJECTION_LIMIT = 4;
+const REJECTION_TIMEFRAME_DAYS = 3;
+const BLOCK_DURATION_WEEKS = 2;
 
 type ServiceProvider = {
   name: string;
@@ -38,7 +43,7 @@ type CardInput = {
   pin: string;
 };
 
-export default function SamplePage() {
+export default function ActivateProPage() {
   const { user, isUserLoading } = useAuthContext();
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -50,7 +55,35 @@ export default function SamplePage() {
   
   const progressBarContainerRef = useRef<HTMLDivElement>(null);
   const stickyProgressBarContainerRef = useRef<HTMLDivElement>(null);
+  
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
 
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+
+  const isBlocked = useMemo(() => {
+    if (!userProfile?.rejectedPayments) return false;
+
+    const now = new Date();
+    const threeDaysAgo = new Date(now);
+    threeDaysAgo.setDate(now.getDate() - REJECTION_TIMEFRAME_DAYS);
+
+    const recentRejections = userProfile.rejectedPayments.filter(
+      (t: any) => t.toDate() > threeDaysAgo
+    );
+
+    if (recentRejections.length >= REJECTION_LIMIT) {
+      const lastRejectionDate = recentRejections[recentRejections.length - 1].toDate();
+      const blockLiftDate = new Date(lastRejectionDate);
+      blockLiftDate.setDate(lastRejectionDate.getDate() + (BLOCK_DURATION_WEEKS * 7));
+      
+      return now < blockLiftDate;
+    }
+
+    return false;
+  }, [userProfile]);
 
   const settingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -75,8 +108,7 @@ export default function SamplePage() {
     const handleScroll = () => {
       if (progressBarContainerRef.current) {
         const { top } = progressBarContainerRef.current.getBoundingClientRect();
-        // The header height is 64px (h-16)
-        if (top <= 64) {
+        if (top <= 64) { // Header height is 64px (h-16)
           setIsProgressBarSticky(true);
         } else {
           setIsProgressBarSticky(false);
@@ -85,13 +117,10 @@ export default function SamplePage() {
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
-    // Automatically add a new card input if the last one is filled and payment is not complete
     if (cardInputs.length > 0 && !isPaymentComplete) {
       const lastCard = cardInputs[cardInputs.length - 1];
       if (lastCard.provider && lastCard.amount && lastCard.pin) {
@@ -106,7 +135,6 @@ export default function SamplePage() {
         if (card.id === id) {
           let finalValue = value;
           if (field === 'pin') {
-            // Allow only numeric characters for the PIN
             finalValue = value.replace(/\D/g, '');
           }
           return { ...card, [field]: finalValue };
@@ -153,7 +181,18 @@ export default function SamplePage() {
   };
 
   const handleSubmit = async () => {
-    if (!user || !firestore || !isPaymentComplete) {
+    if (!user || !firestore) return;
+
+    if (isBlocked) {
+        toast({
+            title: 'Payment Temporarily Blocked',
+            description: 'Your account has been temporarily blocked from making new payments due to multiple recent rejections.',
+            variant: 'destructive',
+        });
+        return;
+    }
+
+    if (!isPaymentComplete) {
       toast({
         title: 'Incomplete Payment',
         description: `Please add cards to meet the total of LKR ${TOTAL_PAYMENT_AMOUNT}.`,
@@ -166,11 +205,15 @@ export default function SamplePage() {
     try {
       const paymentData = {
         userId: user.uid,
+        user: { // Denormalize user data for admin view
+            displayName: user.displayName,
+            email: user.email,
+        },
         totalAmount: totalEnteredAmount,
         status: 'pending',
         createdAt: serverTimestamp(),
         cards: cardInputs
-          .filter(c => c.provider && c.amount && c.pin) // Only submit filled cards
+          .filter(c => c.provider && c.amount && c.pin)
           .map(({ provider, amount, pin }) => ({ provider, amount: Number(amount), pin })),
       };
 
@@ -178,7 +221,6 @@ export default function SamplePage() {
 
       showNotification('Payment Submitted');
       
-      // Optionally reset form or redirect user
       setCardInputs([{ id: 1, provider: '', amount: '', pin: '' }]);
 
     } catch (error) {
@@ -208,6 +250,24 @@ export default function SamplePage() {
   const renderContent = () => {
     if (isLoadingSettings || isUserLoading) {
       return <Skeleton className="h-64 w-full" />;
+    }
+
+    if (isBlocked) {
+        return (
+             <Card className="border-destructive">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-destructive">
+                    <AlertTriangle /> Account Blocked
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-destructive">
+                    Your account has been temporarily blocked from making new payments due to multiple recent rejections.
+                    Please contact support or try again later.
+                  </p>
+                </CardContent>
+              </Card>
+        )
     }
 
     return (
@@ -312,7 +372,7 @@ export default function SamplePage() {
           <Button 
             className="w-full"
             onClick={handleSubmit} 
-            disabled={!isPaymentComplete || isSubmitting}
+            disabled={!isPaymentComplete || isSubmitting || isBlocked}
           >
             {isSubmitting ? (
               <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</>
@@ -331,7 +391,6 @@ export default function SamplePage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-       {/* Sticky Progress Bar */}
       <div 
         ref={stickyProgressBarContainerRef}
         className={cn(
@@ -362,3 +421,4 @@ export default function SamplePage() {
     </div>
   );
 }
+    

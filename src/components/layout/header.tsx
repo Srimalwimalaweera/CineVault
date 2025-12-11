@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useNotification } from '@/hooks/use-notification';
 import { cn } from '@/lib/utils';
+import { ShieldCheck } from 'lucide-react';
 
 const XVaultIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -98,6 +99,14 @@ export function Header() {
                 </span>
              </div>
           </div>
+          {isAdmin && (
+            <Button variant="ghost" size="icon" asChild>
+                <Link href="/admin/payments">
+                    <ShieldCheck />
+                    <span className="sr-only">Manage Payments</span>
+                </Link>
+            </Button>
+          )}
           <ThemeToggle />
           {isAdmin && (
             <div className="hidden md:block">
@@ -148,3 +157,5 @@ export function Header() {
     </header>
   );
 }
+
+    

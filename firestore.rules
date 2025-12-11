@@ -58,14 +58,17 @@ service cloud.firestore {
 
     /**
      * Validates that the role being assigned is not 'admin', unless the user is already an admin.
-     * This prevents users from escalating their own privileges.
+     * This prevents users from escalating their own privileges. Admins can grant 'pro' status.
      */
     function isNotEscalatingRole() {
-      // The `resource != null` check handles creation, where `resource` is null.
-      let isAlreadyAdmin = resource != null && resource.data.role == 'admin';
-      let isPro = resource != null && resource.data.role == 'pro';
-      // An admin can change roles, but a user cannot assign themselves 'admin' or 'pro'.
-      return (request.resource.data.role != 'admin' && request.resource.data.role != 'pro') || isAlreadyAdmin || isPro;
+        let isAlreadyAdmin = resource != null && resource.data.role == 'admin';
+        // A user cannot assign themselves 'admin' or 'pro'. Only an admin can assign 'pro'.
+        if (isDbAdmin()) {
+            return true; // Admins can change roles.
+        } else {
+            // Users can't grant themselves 'admin' or 'pro' role.
+            return request.resource.data.role != 'admin' && request.resource.data.role != 'pro';
+        }
     }
     
     /**
@@ -86,8 +89,6 @@ service cloud.firestore {
      * @path /videos/{videoId}
      */
     match /videos/{videoId} {
-      // Allow `get` and `list` operations for all users, but only for published videos.
-      // Admins can read/list any video regardless of status.
       allow read, list: if resource.data.status == 'published' || isDbAdmin();
       allow write: if isDbAdmin();
       
@@ -98,9 +99,6 @@ service cloud.firestore {
        */
       match /reactions/{userId} {
         allow read: if true;
-        // Allow a user to create, update, or delete their own reaction document.
-        // This covers the "upsert" logic of setDoc({ merge: true }).
-        // The `isOwner` function checks if the authenticated user's ID matches the {userId} in the path.
         allow write, delete: if isOwner(userId);
       }
       
@@ -110,7 +108,6 @@ service cloud.firestore {
        */
       match /ratings/{userId} {
         allow read: if true;
-        // Allow user to write/delete their own rating if the value is valid.
         allow write: if isOwner(userId) && isValidRating();
         allow delete: if isOwner(userId);
       }
@@ -122,11 +119,8 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow read: if isOwner(userId) || isDbAdmin();
-      // Allow a user to write to their own document, but prevent them from making themselves an admin.
-      // Admins can be granted the 'pro' role by an admin.
       allow write: if (isOwner(userId) && isNotEscalatingRole()) || isDbAdmin();
-      // Deleting user profiles is disabled to maintain data integrity.
-      allow delete: if false;
+      allow delete: if false; // Deleting user profiles is disabled to maintain data integrity.
       
       /**
        * @description A user's private collection of favorite videos.
@@ -159,10 +153,13 @@ service cloud.firestore {
      * @path /payments/{paymentId}
      */
     match /payments/{paymentId} {
-        allow read: if isDbAdmin(); // Only admins can view payment details.
-        // Users can create their own payment record, but cannot read/update/delete any.
+        // Admins can read and update (approve/reject) payment details.
+        allow read, update: if isDbAdmin();
+        // Users can create their own payment record, but cannot read or update any.
         allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-        allow update, delete: if false;
+        allow delete: if false;
     }
   }
 }
+
+    

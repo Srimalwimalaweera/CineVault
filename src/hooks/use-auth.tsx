@@ -13,11 +13,11 @@ import { setDocumentNonBlocking } from '@/firebase';
 import { useNotification } from './use-notification';
 
 type UserProfile = {
-  role: string;
+  role: 'user' | 'admin' | 'pro';
 }
 
 type AuthContextType = {
-  user: User | null;
+  user: (User & UserProfile) | null;
   isUserLoading: boolean;
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -29,47 +29,44 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { user, isUserLoading } = useUser();
+  const { user: firebaseUser, isUserLoading: isAuthLoading } = useUser();
   const auth = useAuth();
   const firestore = useFirestore();
-  const { toast } = useToast();
   const { showNotification } = useNotification();
   
   const userProfileRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, "users", user.uid);
-  }, [firestore, user]);
+    if (!firestore || !firebaseUser) return null;
+    return doc(firestore, "users", firebaseUser.uid);
+  }, [firestore, firebaseUser]);
 
-  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userProfileRef);
 
-  const isAdmin = userProfile?.role === 'admin';
+  const isUserLoading = isAuthLoading || (!!firebaseUser && isProfileLoading);
+
+  const user = firebaseUser && userProfile ? { ...firebaseUser, ...userProfile } : null;
+  const isAdmin = user?.role === 'admin';
 
   const createUserProfile = useCallback(async (user: User) => {
     if (!firestore || !user) return;
     const userRef = doc(firestore, "users", user.uid);
-
-    // 1. Check if the user document already exists
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
-      // If user exists, don't send the role (to preserve admin status)
-      const userProfileData = {
+      setDocumentNonBlocking(userRef, {
         displayName: user.displayName || user.email?.split('@')[0],
         email: user.email,
         photoURL: user.photoURL,
-        lastSeen: serverTimestamp(), // Good idea to track last login
-      };
-      setDocumentNonBlocking(userRef, userProfileData, { merge: true });
+        lastSeen: serverTimestamp(),
+      }, { merge: true });
     } else {
-      // For a new user, set the role to 'user'
-      const userProfileData = {
+      setDocumentNonBlocking(userRef, {
         displayName: user.displayName || user.email?.split('@')[0],
         email: user.email,
         photoURL: user.photoURL,
-        role: 'user', // Only for new users
+        role: 'user',
         createdAt: serverTimestamp(),
-      };
-      setDocumentNonBlocking(userRef, userProfileData, { merge: true });
+        rejectedPayments: [],
+      }, { merge: true });
     }
   }, [firestore]);
 
@@ -108,10 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await createUserProfile(userCredential.user);
         showNotification("Logged In with Google");
       }
-      // If userCredential is undefined (because the user closed the popup),
-      // we simply do nothing.
     } catch (error: any) {
-      // This will now only catch other errors, as popup-closed is handled in initiateGoogleSignIn
       console.error("Google Sign-In Error:", error);
       showNotification("Google Sign-In Failed");
     }
@@ -138,3 +132,5 @@ export const useAuthContext = () => {
   }
   return context;
 };
+
+    
