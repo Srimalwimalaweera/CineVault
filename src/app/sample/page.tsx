@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuthContext } from '@/hooks/use-auth';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, serverTimestamp, addDoc, collection, setDoc } from 'firebase/firestore';
@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from "@/components/ui/progress";
+import { cn } from '@/lib/utils';
 
 const TOTAL_PAYMENT_AMOUNT = 950;
 
@@ -45,6 +46,11 @@ export default function SamplePage() {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cardInputs, setCardInputs] = useState<CardInput[]>([{ id: 1, provider: '', amount: '', pin: '' }]);
+  const [isProgressBarSticky, setIsProgressBarSticky] = useState(false);
+  
+  const progressBarContainerRef = useRef<HTMLDivElement>(null);
+  const stickyProgressBarContainerRef = useRef<HTMLDivElement>(null);
+
 
   const settingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -63,6 +69,26 @@ export default function SamplePage() {
   
   const remainingAmount = TOTAL_PAYMENT_AMOUNT - totalEnteredAmount;
   const isPaymentComplete = totalEnteredAmount >= TOTAL_PAYMENT_AMOUNT;
+  const progressValue = (totalEnteredAmount / TOTAL_PAYMENT_AMOUNT) * 100;
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (progressBarContainerRef.current) {
+        const { top } = progressBarContainerRef.current.getBoundingClientRect();
+        // The header height is 64px (h-16)
+        if (top <= 64) {
+          setIsProgressBarSticky(true);
+        } else {
+          setIsProgressBarSticky(false);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   useEffect(() => {
     // Automatically add a new card input if the last one is filled and payment is not complete
@@ -171,6 +197,18 @@ export default function SamplePage() {
       setIsSubmitting(false);
     }
   };
+  
+  const ProgressBarSection = ({ isSticky = false } : { isSticky?: boolean }) => (
+    <div className="space-y-2">
+      <div className='flex justify-between items-center text-sm'>
+        <span className='font-medium'>Amount Paid: LKR {totalEnteredAmount.toFixed(2)}</span>
+        <span className={cn(isSticky ? 'text-foreground' : 'text-muted-foreground')}>
+          Remaining: LKR {(remainingAmount > 0 ? remainingAmount : 0).toFixed(2)}
+        </span>
+      </div>
+      <Progress value={progressValue} />
+    </div>
+  );
 
   const renderContent = () => {
     if (isLoadingSettings || isUserLoading) {
@@ -188,7 +226,6 @@ export default function SamplePage() {
                 <span className="font-bold text-foreground"> LKR {TOTAL_PAYMENT_AMOUNT.toFixed(2)}</span>.
               </CardDescription>
             </div>
-            {/* Temporary button for seeding data */}
             {!settings && (
               <Button variant="outline" onClick={seedServiceProviders}>
                 <Database className="mr-2 h-4 w-4" /> Seed Data
@@ -197,13 +234,10 @@ export default function SamplePage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <div className='flex justify-between items-center text-sm'>
-              <span className='font-medium'>Amount Paid: LKR {totalEnteredAmount.toFixed(2)}</span>
-              <span className='text-muted-foreground'>Remaining: LKR {(remainingAmount > 0 ? remainingAmount : 0).toFixed(2)}</span>
-            </div>
-            <Progress value={(totalEnteredAmount / TOTAL_PAYMENT_AMOUNT) * 100} />
+          <div ref={progressBarContainerRef} className="h-12">
+            {!isProgressBarSticky && <ProgressBarSection />}
           </div>
+          
           <div className="space-y-4">
             {cardInputs.map((card, index) => (
               <div key={card.id} className="grid grid-cols-1 sm:grid-cols-[1fr,1fr,2fr,auto] gap-2 items-end p-3 border rounded-lg bg-background">
@@ -302,6 +336,18 @@ export default function SamplePage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
+       {/* Sticky Progress Bar */}
+      <div 
+        ref={stickyProgressBarContainerRef}
+        className={cn(
+          'fixed top-16 left-0 right-0 z-40 bg-background/80 backdrop-blur-lg border-b p-4 transition-transform duration-300 ease-in-out',
+          isProgressBarSticky ? 'translate-y-0' : '-translate-y-full'
+        )}
+      >
+        <div className='container max-w-2xl'>
+            <ProgressBarSection isSticky={true} />
+        </div>
+      </div>
       <main className="flex-1 bg-muted/20">
         <div className="container max-w-2xl py-12">
           <div className="mb-8 flex items-center gap-4">
