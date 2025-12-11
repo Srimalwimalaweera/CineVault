@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from "@/components/ui/progress";
 import { cn } from '@/lib/utils';
+import { useNotification } from '@/hooks/use-notification';
 
 const TOTAL_PAYMENT_AMOUNT = 950;
 
@@ -41,6 +42,7 @@ export default function SamplePage() {
   const { user, isUserLoading } = useAuthContext();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { showNotification } = useNotification();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cardInputs, setCardInputs] = useState<CardInput[]>([{ id: 1, provider: '', amount: '', pin: '' }]);
@@ -139,10 +141,7 @@ export default function SamplePage() {
     };
     try {
       await setDoc(settingsDocRef, dummyData);
-      toast({
-        title: 'Database Seeded',
-        description: 'Service provider data has been added to Firestore.',
-      });
+      showNotification('Database Seeded');
     } catch(error) {
       console.error('Error seeding data:', error);
       toast({
@@ -177,10 +176,8 @@ export default function SamplePage() {
 
       await addDocumentNonBlocking(collection(firestore, 'payments'), paymentData);
 
-      toast({
-        title: 'Payment Submitted',
-        description: 'Your payment is being processed. You will be notified shortly.',
-      });
+      showNotification('Payment Submitted');
+      
       // Optionally reset form or redirect user
       setCardInputs([{ id: 1, provider: '', amount: '', pin: '' }]);
 
@@ -365,5 +362,3 @@ export default function SamplePage() {
     </div>
   );
 }
-
-    

@@ -32,6 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useNotification } from "@/hooks/use-notification";
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters long."),
@@ -45,6 +46,7 @@ export function AdminUploadDialog() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const firestore = useFirestore();
+  const { showNotification } = useNotification();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -82,6 +84,7 @@ export function AdminUploadDialog() {
         };
         
         addDocumentNonBlocking(videosCollection, newVideo);
+        showNotification("Video Uploaded");
         
         form.reset();
         setOpen(false);

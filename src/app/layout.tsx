@@ -5,6 +5,8 @@ import { AuthProvider } from '@/hooks/use-auth';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ThemeProvider } from '@/components/theme-provider';
+import { NotificationProvider } from '@/hooks/use-notification';
+
 export const runtime = 'edge';
 export const metadata: Metadata = {
   title: 'XVault',
@@ -29,15 +31,17 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
         >
-          <FirebaseClientProvider>
-            <AuthProvider>
-              <div className="relative flex min-h-screen w-full flex-col">
-                <div className="pb-16 md:pb-0">{children}</div>
-                <BottomNav />
-              </div>
-              <Toaster />
-            </AuthProvider>
-          </FirebaseClientProvider>
+          <NotificationProvider>
+            <FirebaseClientProvider>
+              <AuthProvider>
+                <div className="relative flex min-h-screen w-full flex-col">
+                  <div className="pb-16 md:pb-0">{children}</div>
+                  <BottomNav />
+                </div>
+                <Toaster />
+              </AuthProvider>
+            </FirebaseClientProvider>
+          </NotificationProvider>
         </ThemeProvider>
       </body>
     </html>

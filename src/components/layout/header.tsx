@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useNotification } from '@/hooks/use-notification';
+import { cn } from '@/lib/utils';
 
 const XVaultIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -62,6 +64,7 @@ const XVaultIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export function Header() {
   const { user, isUserLoading, logout, isAdmin } = useAuthContext();
+  const { notification, isVisible } = useNotification();
   const isLoggedIn = !!user;
 
   const getInitials = (email: string | null | undefined) => {
@@ -81,6 +84,20 @@ export function Header() {
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
+           <div className="relative flex items-center justify-end flex-1">
+             <div className="flex-1 flex justify-center">
+                <span
+                  className={cn(
+                    'text-sm text-muted-foreground transition-opacity duration-300',
+                    isVisible ? 'opacity-100' : 'opacity-0'
+                  )}
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  {notification}
+                </span>
+             </div>
+          </div>
           <ThemeToggle />
           {isAdmin && (
             <div className="hidden md:block">

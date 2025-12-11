@@ -18,6 +18,7 @@ import { Rating } from '@/components/rating';
 import type { Rating as RatingType } from '@/lib/types';
 import { VideoLightbox } from '@/components/video-lightbox';
 import { AddToListDialog } from '@/components/add-to-list-dialog';
+import { useNotification } from '@/hooks/use-notification';
 
 // Hook to detect single/double/triple clicks
 const useClickDetection = (
@@ -64,6 +65,7 @@ type HeartAnimation = {
 export function VideoCard({ video, priority = false }: { video: Video, priority?: boolean }) {
   const { user, isAdmin } = useAuthContext();
   const firestore = useFirestore();
+  const { showNotification } = useNotification();
 
   const [showReactions, setShowReactions] = React.useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
@@ -145,6 +147,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
 
   const handleInteraction = React.useCallback((type: 'favorite' | 'playlist' | 'reaction' | 'rating' | 'trash', value?: 'heart' | 'fire' | 'hot-face' | number) => {
     if (!user || !firestore) {
+       showNotification("Login Required");
       return;
     }
     
@@ -157,6 +160,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
             createdAt: serverTimestamp(),
         };
         setDocumentNonBlocking(reactionRef, newReaction, { merge: true });
+        showNotification(`${value.charAt(0).toUpperCase() + value.slice(1)} Reaction Added`);
         
         if (value === 'heart' && !likedInSession.current) {
           likedInSession.current = true; // Mark as liked for this session
@@ -170,15 +174,17 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         const favRef = doc(firestore, `users/${user.uid}/favorites`, video.id);
         if (isFavorited) {
           deleteDocumentNonBlocking(favRef);
+          showNotification("Removed from Favorites");
         } else {
           const favData = { videoId: video.id, userId: user.uid, createdAt: serverTimestamp() };
           setDocumentNonBlocking(favRef, favData, { merge: true });
+          showNotification("Added to Favorites");
         }
         return;
     }
     
     if (type === 'playlist') {
-        // This is now handled by the AddToListDialog
+        // This is now handled by the AddToListDialog, which has its own notifications
         return;
     }
     
@@ -191,6 +197,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
             createdAt: serverTimestamp(),
         };
         setDocumentNonBlocking(ratingRef, newRating, { merge: true });
+        showNotification(`You rated ${value} stars`);
     }
 
     if (type === 'trash') {
@@ -200,9 +207,10 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
             status: 'trashed',
             trashedAt: serverTimestamp()
         });
+        showNotification("Video moved to trash");
     }
 
-  }, [user, firestore, video.id, isFavorited, isAdmin]);
+  }, [user, firestore, video.id, isFavorited, isAdmin, showNotification]);
 
     const handleWatchNowClick = React.useCallback(async (e: React.MouseEvent<HTMLAnchorElement>) => {
         if (!firestore) return;
@@ -281,6 +289,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
         if (userReaction) {
           if (userReactionRef) {
             deleteDocumentNonBlocking(userReactionRef);
+            showNotification("Reaction Removed");
           }
         } else {
           handleInteraction('reaction', 'heart');
@@ -458,7 +467,3 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       </>
   );
 }
-
-    
-
-    

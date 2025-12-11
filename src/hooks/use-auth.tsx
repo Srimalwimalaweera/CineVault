@@ -10,6 +10,7 @@ import { signOut } from 'firebase/auth';
 import { useToast } from './use-toast';
 import { doc, serverTimestamp, setDoc, getDoc } from 'firebase/firestore'; // Added getDoc
 import { setDocumentNonBlocking } from '@/firebase';
+import { useNotification } from './use-notification';
 
 type UserProfile = {
   role: string;
@@ -32,6 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const auth = useAuth();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { showNotification } = useNotification();
   
   const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -77,22 +79,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userCredential = await initiateEmailSignIn(auth, email, password);
       if (userCredential && userCredential.user) {
         await createUserProfile(userCredential.user);
+        showNotification("Logged In");
       }
     } catch (error: any) {
       console.error("Login Error:", error);
+      showNotification("Login Failed");
     }
-  }, [auth, createUserProfile]);
+  }, [auth, createUserProfile, showNotification]);
 
   const signup = useCallback(async (email: string, password: string) => {
     try {
         const userCredential = await initiateEmailSignUp(auth, email, password);
         if (userCredential && userCredential.user) {
             await createUserProfile(userCredential.user);
+            showNotification("Signup Successful");
         }
     } catch (error: any) {
         console.error("Signup Error:", error);
+        showNotification("Signup Failed");
     }
-  }, [auth, createUserProfile]);
+  }, [auth, createUserProfile, showNotification]);
 
 
   const signupWithGoogle = useCallback(async () => {
@@ -100,19 +106,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userCredential = await initiateGoogleSignIn(auth);
       if (userCredential && userCredential.user) {
         await createUserProfile(userCredential.user);
+        showNotification("Logged In with Google");
       }
       // If userCredential is undefined (because the user closed the popup),
       // we simply do nothing.
     } catch (error: any) {
       // This will now only catch other errors, as popup-closed is handled in initiateGoogleSignIn
       console.error("Google Sign-In Error:", error);
+      showNotification("Google Sign-In Failed");
     }
-  }, [auth, createUserProfile]);
+  }, [auth, createUserProfile, showNotification]);
 
 
   const logout = useCallback(() => {
     signOut(auth);
-  }, [auth]);
+    showNotification("Logged Out");
+  }, [auth, showNotification]);
 
 
   return (
