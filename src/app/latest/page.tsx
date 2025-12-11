@@ -43,9 +43,14 @@ export default function LatestPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchVideos = useCallback(async (initial = false) => {
+  const fetchVideos = useCallback(async (initialLoad = false) => {
     if (!firestore) return;
-    if (initial) setIsLoading(true); else setIsLoadingMore(true);
+    if (initialLoad) {
+        setIsLoading(true);
+    } else {
+        if (!hasMore || isLoadingMore) return;
+        setIsLoadingMore(true);
+    }
 
     try {
       const thirtyDaysAgo = new Date();
@@ -58,8 +63,9 @@ export default function LatestPage() {
         orderBy('createdAt', 'desc'),
         limit(PAGE_SIZE)
       );
-
-      if (!initial && lastVisible) {
+      
+      // Use the lastVisible from state directly here for pagination
+      if (!initialLoad && lastVisible) {
         q = query(q, startAfter(lastVisible));
       }
 
@@ -68,27 +74,39 @@ export default function LatestPage() {
       const newVideos = documentSnapshots.docs.map(doc => ({ ...doc.data() as Video, id: doc.id }));
       const lastDoc = documentSnapshots.docs[documentSnapshots.docs.length - 1];
 
-      setVideos(prev => initial ? newVideos : [...prev, ...newVideos]);
-      setLastVisible(lastDoc || null);
       setHasMore(documentSnapshots.docs.length === PAGE_SIZE);
+      setLastVisible(lastDoc || null);
+      
+      if (initialLoad) {
+        setVideos(newVideos);
+      } else {
+        setVideos(prev => [...prev, ...newVideos]);
+      }
 
     } catch (error) {
       console.error("Error fetching videos: ", error);
+      toast({
+          title: "Error",
+          description: "Could not fetch videos.",
+          variant: "destructive"
+      })
     } finally {
-      setIsLoading(false);
+      if(initialLoad) setIsLoading(false);
       setIsLoadingMore(false);
     }
-  }, [firestore, lastVisible]);
+  }, [firestore, hasMore, isLoadingMore, lastVisible, toast]);
 
   useEffect(() => {
     fetchVideos(true);
-  }, [fetchVideos]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   const loadMore = useCallback(() => {
-    if (!isLoadingMore && hasMore) {
-      fetchVideos(false);
+    if (!isLoading && !isLoadingMore && hasMore) {
+        fetchVideos(false);
     }
-  }, [isLoadingMore, hasMore, fetchVideos]);
+  }, [isLoading, isLoadingMore, hasMore, fetchVideos]);
+
 
   const lastVideoRef = useInfiniteScroll(loadMore);
 
@@ -111,14 +129,12 @@ export default function LatestPage() {
               </div>
             ))}
             {videos.map((video, index) => {
-              if (videos.length === index + 1) {
-                return (
-                  <div ref={lastVideoRef} key={video.id}>
-                    <VideoCard video={video} priority={index < 2} />
-                  </div>
-                );
-              }
-              return <VideoCard key={video.id} video={video} priority={index < 2} />;
+              const isLastElement = videos.length === index + 1;
+              return (
+                <div ref={isLastElement ? lastVideoRef : null} key={video.id}>
+                  <VideoCard video={video} priority={index < 2} />
+                </div>
+              );
             })}
 
             {isLoadingMore && (
