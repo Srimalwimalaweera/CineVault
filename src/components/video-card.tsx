@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/use-auth";
-import { Bookmark, ListPlus, ThumbsUp, Play, Download, Heart, Trash2 } from 'lucide-react';
+import { Bookmark, ListPlus, ThumbsUp, Play, Download, Heart, Trash2, Crown } from 'lucide-react';
 import type { Video } from '@/lib/types';
 import * as React from 'react';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -316,6 +316,35 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     return <Heart className="h-6 w-6" />;
   };
 
+  const isProVideo = video.accessLevel === 'pro';
+  const canWatch = user?.status === 'pro' || !isProVideo;
+
+  const renderWatchButton = () => {
+    if (canWatch) {
+      return (
+        <Button asChild variant="ghost" className="rounded-none text-muted-foreground">
+          <a href={video.videoUrl} target="_blank" rel="noopener noreferrer" onClick={handleWatchNowClick}>
+            <Play className="h-5 w-5 mr-2" />
+            <span className="animate-shimmer bg-[linear-gradient(110deg,hsl(var(--foreground))_35%,hsl(var(--primary)),hsl(var(--foreground))_65%)] bg-[length:200%_100%] bg-clip-text text-transparent">
+              Watch now
+            </span>
+          </a>
+        </Button>
+      );
+    } else {
+      return (
+        <Button asChild variant="ghost" className="rounded-none text-gold hover:text-gold bg-gold/10 hover:bg-gold/20">
+          <Link href="/pro">
+            <Crown className="h-5 w-5 mr-2" />
+            <span className="animate-shimmer-gold bg-gradient-to-r from-gold via-yellow-200 to-gold bg-[length:200%_100%] bg-clip-text text-transparent">
+              Upgrade to Watch
+            </span>
+          </Link>
+        </Button>
+      );
+    }
+  };
+
   return (
       <>
       <Card className="w-full max-w-2xl mx-auto overflow-hidden transition-all duration-300 ease-in-out">
@@ -402,14 +431,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
                     <Bookmark className="h-5 w-5 mr-2" />
                     Favorite
                 </Button>
-                <Button asChild variant="ghost" className="rounded-none text-muted-foreground">
-                    <a href={video.videoUrl} target="_blank" rel="noopener noreferrer" onClick={handleWatchNowClick}>
-                        <Play className="h-5 w-5 mr-2" />
-                        <span className="animate-shimmer bg-[linear-gradient(110deg,hsl(var(--foreground))_35%,hsl(var(--primary)),hsl(var(--foreground))_65%)] bg-[length:200%_100%] bg-clip-text text-transparent">
-                          Watch now
-                        </span>
-                    </a>
-                </Button>
+                {renderWatchButton()}
                 <AddToListDialog videoId={video.id}>
                     <Button variant="ghost" className="rounded-none text-muted-foreground w-full">
                         <ListPlus className="h-5 w-5 mr-2" />
@@ -467,5 +489,3 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
       </>
   );
 }
-
-    
