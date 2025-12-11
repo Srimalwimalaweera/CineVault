@@ -48,9 +48,13 @@ export default function LatestPage() {
     if (initial) setIsLoading(true); else setIsLoadingMore(true);
 
     try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
       let q = query(
         collection(firestore, 'videos'),
         where('status', '==', 'published'),
+        where('createdAt', '>=', thirtyDaysAgo),
         orderBy('createdAt', 'desc'),
         limit(PAGE_SIZE)
       );
@@ -78,7 +82,7 @@ export default function LatestPage() {
 
   useEffect(() => {
     fetchVideos(true);
-  }, []); // Only on initial mount
+  }, [fetchVideos]);
 
   const loadMore = useCallback(() => {
     if (!isLoadingMore && hasMore) {
@@ -132,7 +136,7 @@ export default function LatestPage() {
 
             {!isLoading && videos.length === 0 && (
                 <div className="text-center text-muted-foreground py-12">
-                    <p>No videos found. Check back later!</p>
+                    <p>No videos found from the last 30 days. Check back later!</p>
                 </div>
             )}
           </div>
