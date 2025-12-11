@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthContext } from '@/hooks/use-auth';
@@ -199,5 +199,3 @@ export default function AdminPaymentsPage() {
     </div>
   );
 }
-
-    
