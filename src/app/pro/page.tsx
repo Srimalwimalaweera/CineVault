@@ -36,7 +36,7 @@ export default function ProPage() {
   useEffect(() => {
     const fetchAnimation = async () => {
         try {
-            const res = await fetch('https://fonts.gstatic.com/s/e/notoemoji/latest/1f451/lottie.json');
+            const res = await fetch('https://lottie.host/b0405f6a-1155-4674-8ac7-2a446fac2a0d/r4O2p0DRIs.json');
             const animationData = await res.json();
             setCrownAnimation(animationData);
         } catch (error) {
