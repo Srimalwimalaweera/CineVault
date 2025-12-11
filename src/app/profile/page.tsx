@@ -8,7 +8,6 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, collection } from 'firebase/firestore';
 import { updateProfile, sendPasswordResetEmail } from 'firebase/auth';
 import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -95,7 +94,6 @@ export default function ProfilePage() {
             </div>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -222,7 +220,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

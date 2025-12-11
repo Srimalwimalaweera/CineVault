@@ -8,7 +8,6 @@ import { useAuthContext } from '@/hooks/use-auth';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, documentId } from 'firebase/firestore';
 import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ListVideo, Film, ArrowLeft } from 'lucide-react';
@@ -196,7 +195,6 @@ export default function PlaylistsPage() {
             )}
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

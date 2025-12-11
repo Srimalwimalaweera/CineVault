@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
 import type { Video } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import React from 'react';
@@ -58,7 +57,6 @@ export default function VideoDetailPage() {
             </div>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -117,7 +115,6 @@ export default function VideoDetailPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

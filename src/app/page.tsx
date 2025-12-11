@@ -1,7 +1,6 @@
 
 'use client';
 import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
 import { VideoCard } from '@/components/video-card';
 import { useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, where } from 'firebase/firestore';
@@ -48,7 +47,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

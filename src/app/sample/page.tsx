@@ -7,7 +7,6 @@ import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, serverTimestamp, addDoc, collection, setDoc } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase';
 import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -364,7 +363,6 @@ export default function SamplePage() {
           {renderContent()}
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

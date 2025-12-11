@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Crown, Zap, Video, Star, BadgeCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -37,7 +36,7 @@ export default function ProPage() {
   useEffect(() => {
     const fetchAnimation = async () => {
         try {
-            const res = await fetch('https://fonts.gstatic.com/s/e/notoemoji/latest/1f451/512.json');
+            const res = await fetch('https://fonts.gstatic.com/s/e/notoemoji/latest/1f451/lottie.json');
             const animationData = await res.json();
             setCrownAnimation(animationData);
         } catch (error) {
@@ -92,7 +91,6 @@ export default function ProPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

@@ -3,7 +3,6 @@
 
 import React from 'react';
 import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Flame } from 'lucide-react';
 
@@ -28,7 +27,6 @@ export default function TrendingPage() {
            </Card>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

@@ -8,7 +8,6 @@ import { useAuthContext } from '@/hooks/use-auth';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Trash2, ArrowLeft, Undo, AlertTriangle } from 'lucide-react';
@@ -149,7 +148,6 @@ export default function TrashPage() {
                     <p>Loading...</p>
                 </div>
             </main>
-            <Footer />
         </div>
     );
   }
@@ -182,7 +180,6 @@ export default function TrashPage() {
           {renderContent()}
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

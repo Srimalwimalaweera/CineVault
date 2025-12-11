@@ -5,7 +5,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useFirestore } from '@/firebase';
 import { collection, query, orderBy, limit, getDocs, startAfter, DocumentData, QueryDocumentSnapshot, where } from 'firebase/firestore';
 import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
 import { VideoCard } from '@/components/video-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Sparkles, Loader2 } from 'lucide-react';
@@ -139,7 +138,6 @@ export default function LatestPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }
