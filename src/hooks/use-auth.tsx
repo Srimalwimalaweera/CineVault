@@ -13,7 +13,8 @@ import { setDocumentNonBlocking } from '@/firebase';
 import { useNotification } from './use-notification';
 
 type UserProfile = {
-  role: 'user' | 'admin' | 'pro';
+  role: 'user' | 'admin';
+  status: 'free' | 'pro';
 }
 
 type AuthContextType = {
@@ -64,6 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: user.email,
         photoURL: user.photoURL,
         role: 'user',
+        status: 'free',
         createdAt: serverTimestamp(),
         rejectedPayments: [],
       }, { merge: true });

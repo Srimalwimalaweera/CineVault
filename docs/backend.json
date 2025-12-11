@@ -108,7 +108,12 @@
         "role": {
             "type": "string",
             "description": "The user's role, e.g., 'user' or 'admin'.",
-            "enum": ["user", "admin", "pro"]
+            "enum": ["user", "admin"]
+        },
+        "status": {
+            "type": "string",
+            "description": "The user's subscription status, e.g., 'free' or 'pro'.",
+            "enum": ["free", "pro"]
         },
         "createdAt": {
             "type": "string",
@@ -139,6 +144,7 @@
         "email",
         "displayName",
         "role",
+        "status",
         "createdAt"
       ]
     },

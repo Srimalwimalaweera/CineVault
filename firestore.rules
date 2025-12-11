@@ -57,18 +57,24 @@ service cloud.firestore {
     }
 
     /**
-     * Validates that the role being assigned is not 'admin', unless the user is already an admin.
-     * This prevents users from escalating their own privileges. Admins can grant 'pro' status.
+     * Validates that the role or status being assigned is not being maliciously escalated.
+     * Prevents users from escalating their own privileges.
      */
-    function isNotEscalatingRole() {
+    function isNotEscalatingPrivileges() {
         let isAlreadyAdmin = resource != null && resource.data.role == 'admin';
-        // A user cannot assign themselves 'admin' or 'pro'. Only an admin can assign 'pro'.
+        
+        // If an admin is making the change, allow it.
         if (isDbAdmin()) {
-            return true; // Admins can change roles.
-        } else {
-            // Users can't grant themselves 'admin' or 'pro' role.
-            return request.resource.data.role != 'admin' && request.resource.data.role != 'pro';
+            return true;
         }
+
+        // If a regular user is making the change:
+        // They cannot change their 'role' at all.
+        let isChangingRole = request.resource.data.role != resource.data.role;
+        // They cannot change their 'status' to 'pro'.
+        let isUpgradingToPro = request.resource.data.status == 'pro' && resource.data.status != 'pro';
+
+        return !isChangingRole && !isUpgradingToPro;
     }
     
     /**
@@ -119,7 +125,7 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow read: if isOwner(userId) || isDbAdmin();
-      allow write: if (isOwner(userId) && isNotEscalatingRole()) || isDbAdmin();
+      allow write: if (isOwner(userId) && isNotEscalatingPrivileges()) || isDbAdmin();
       allow delete: if false; // Deleting user profiles is disabled to maintain data integrity.
       
       /**
@@ -161,5 +167,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

@@ -32,7 +32,7 @@ const proFeatures = [
 
 export default function ProPage() {
   const [crownAnimation, setCrownAnimation] = useState(null);
-  const { user, isUserLoading } = useAuthContext(); // Assuming role is managed here
+  const { user, isUserLoading } = useAuthContext();
 
   useEffect(() => {
     const fetchAnimation = async () => {
@@ -52,7 +52,7 @@ export default function ProPage() {
           return <Skeleton className='w-full h-48' />;
       }
 
-      if (user?.role === 'pro' || user?.role === 'admin') {
+      if (user?.status === 'pro') {
           return (
             <Card className="text-center bg-black/20 border-gold/50">
                 <CardHeader>

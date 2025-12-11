@@ -21,7 +21,8 @@ export type UserProfile = {
     displayName: string;
     email: string;
     photoURL?: string;
-    role: 'user' | 'admin' | 'pro';
+    role: 'user' | 'admin';
+    status: 'free' | 'pro';
     createdAt: any; // Firestore Timestamp
     proActivationDate?: any; // Firestore Timestamp
     rejectedPayments?: any[]; // Array of Timestamps

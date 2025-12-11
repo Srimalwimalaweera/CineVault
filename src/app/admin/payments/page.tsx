@@ -33,7 +33,7 @@ function PaymentCard({ payment }: { payment: Payment }) {
         const userRef = doc(firestore, 'users', payment.userId);
         
         updateDocumentNonBlocking(paymentRef, { status: 'completed', updatedAt: serverTimestamp() });
-        updateDocumentNonBlocking(userRef, { role: 'pro', proActivationDate: serverTimestamp() });
+        updateDocumentNonBlocking(userRef, { status: 'pro', proActivationDate: serverTimestamp() });
 
         showNotification(`Payment from ${payment.user?.displayName} approved.`);
     };
