@@ -128,10 +128,10 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     const fetchAnimations = async () => {
       try {
         const [heartRes, fireRes, hotFaceRes, starRes] = await Promise.all([
-          fetch('https://lottie.host/2e737119-9369-42b7-a0f9-f13a7e93f679/6jH1FkMEOU.json'), // heart
-          fetch('https://lottie.host/b2726733-c618-4ac8-9638-c6f37d11dff7/1j4pPj450B.json'), // fire
-          fetch('https://lottie.host/808b2849-c187-430c-a9a3-5c3e78689b66/kAsi3UaQ1f.json'), // hot-face
-          fetch('https://lottie.host/62909923-a3d8-4a60-a29e-26f849b7d8d2/oYtHdwLdMC.json')  // star
+          fetch('https://assets-v2.lottiefiles.com/a/87291557-195f-435a-a943-119c62a3f773/604cT5Z6pX.json'), // heart
+          fetch('https://assets-v2.lottiefiles.com/a/9f618a38-c6a6-4f40-ba76-a36f5619565f/15iF1bskK2.json'), // fire
+          fetch('https://assets-v2.lottiefiles.com/a/32185b37-5619-4935-a744-1d89a9f4d764/FwsFzz99q1.json'), // hot-face
+          fetch('https://assets-v2.lottiefiles.com/a/136802f3-9366-419b-8c46-1d989f6671e6/vP3e29P5w4.json')  // star
         ]);
         const heart = await heartRes.json();
         const fire = await fireRes.json();
