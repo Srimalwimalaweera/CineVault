@@ -66,7 +66,6 @@ export default function ProPage() {
                     Upgrade Now
                 </Link>
             </Button>
-            <p className="mt-4 text-xs text-white/50">* Pro plan features are for demonstration purposes only.</p>
           </div>
         </div>
       </main>
