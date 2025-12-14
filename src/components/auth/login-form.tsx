@@ -1,3 +1,4 @@
+
 "use client";
 
 import { z } from "zod";
@@ -45,9 +46,12 @@ export function LoginForm({ setOpen }: LoginFormProps) {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    login(values.email, values.password);
-    setOpen(false);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    await login(values.email, values.password);
+    // Do not close the dialog on failed login, let user try again.
+    // The auth state listener will handle UI changes on successful login.
+    // A successful login will cause the user object to be populated,
+    // and the AuthDialog will typically be replaced by the user profile button.
   }
   
   const handleGoogleSignIn = async () => {

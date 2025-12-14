@@ -1,3 +1,4 @@
+
 "use client";
 
 import { z } from "zod";
@@ -50,9 +51,8 @@ export function SignUpForm({ setOpen }: SignUpFormProps) {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    signup(values.email, values.password);
-    setOpen(false);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    await signup(values.email, values.password);
   }
 
   const handleGoogleSignUp = async () => {

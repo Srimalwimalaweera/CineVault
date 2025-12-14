@@ -34,6 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const auth = useAuth();
   const firestore = useFirestore();
   const { showNotification } = useNotification();
+  const { toast } = useToast();
   
   const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !firebaseUser) return null;
@@ -81,10 +82,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         showNotification("Logged In");
       }
     } catch (error: any) {
-      console.error("Login Error:", error);
-      showNotification("Login Failed");
+      console.error("Login Error:", error.code, error.message);
+      if (error.code === 'auth/invalid-credential') {
+        toast({
+            title: "Login Failed",
+            description: "Invalid email or password. Please try again.",
+            variant: "destructive"
+        });
+      } else {
+        toast({
+            title: "Login Failed",
+            description: "An unexpected error occurred. Please try again later.",
+            variant: "destructive"
+        });
+      }
     }
-  }, [auth, createUserProfile, showNotification]);
+  }, [auth, createUserProfile, showNotification, toast]);
 
   const signup = useCallback(async (email: string, password: string) => {
     try {
@@ -95,9 +108,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     } catch (error: any) {
         console.error("Signup Error:", error);
-        showNotification("Signup Failed");
+        toast({
+            title: "Signup Failed",
+            description: "Could not create account. The email might already be in use.",
+            variant: "destructive"
+        });
     }
-  }, [auth, createUserProfile, showNotification]);
+  }, [auth, createUserProfile, showNotification, toast]);
 
 
   const signupWithGoogle = useCallback(async () => {
@@ -134,5 +151,3 @@ export const useAuthContext = () => {
   }
   return context;
 };
-
-    
