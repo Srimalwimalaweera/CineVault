@@ -128,9 +128,9 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
     const fetchAnimations = async () => {
       try {
         const [heartRes, fireRes, hotFaceRes, starRes] = await Promise.all([
-          fetch('https://assets-v2.lottiefiles.com/a/87291557-195f-435a-a943-119c62a3f773/604cT5Z6pX.json'), // heart
-          fetch('https://assets-v2.lottiefiles.com/a/9f618a38-c6a6-4f40-ba76-a36f5619565f/15iF1bskK2.json'), // fire
-          fetch('https://assets-v2.lottiefiles.com/a/32185b37-5619-4935-a744-1d89a9f4d764/FwsFzz99q1.json'), // hot-face
+          fetch('https://lottie.host/ec3b1a20-172c-42c9-8977-101d243c3330/y4Y2M5V23c.json'), // heart
+          fetch('https://lottie.host/e892e5f3-52a1-432d-8a85-64d508253139/21tBqM5cE4.json'), // fire
+          fetch('https://lottie.host/80b59f23-1c39-46f2-959c-73c33364f32c/L1GkC0b2o6.json'), // hot-face
           fetch('https://lottie.host/62909923-a3d8-4a60-a29e-26f849b7d8d2/oYtHdwLdMC.json')  // star
         ]);
         const heart = await heartRes.json();

@@ -37,7 +37,7 @@ export default function ProPage() {
   useEffect(() => {
     const fetchAnimation = async () => {
         try {
-            const res = await fetch('https://assets-v2.lottiefiles.com/a/53b8902c-116d-4916-b605-c09a1555543e/L3Yx5hLq0G.json');
+            const res = await fetch('https://lottie.host/8df1918a-a212-4d56-83af-163b3d2b1d3d/M5TfHyHn74.json');
             const animationData = await res.json();
             setCrownAnimation(animationData);
         } catch (error) {
