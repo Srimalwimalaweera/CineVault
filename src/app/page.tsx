@@ -3,7 +3,7 @@
 import { Header } from '@/components/layout/header';
 import { VideoCard } from '@/components/video-card';
 import { useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, where } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Video } from '@/lib/types';
@@ -13,9 +13,9 @@ export default function Home() {
 
   const videosQuery = useMemoFirebase(() => {
     if (!firestore) return null;
+    // Simplified query to remove the 'where' clause that requires a composite index.
     return query(
         collection(firestore, 'videos'), 
-        where('status', '==', 'published'),
         orderBy('title')
     );
   }, [firestore]);
@@ -37,7 +37,7 @@ export default function Home() {
                 </div>
               </div>
             ))}
-            {videos?.map((video, index) => (
+            {videos?.filter(video => video.status === 'published').map((video, index) => (
               <VideoCard 
                 key={video.id} 
                 video={video} 
