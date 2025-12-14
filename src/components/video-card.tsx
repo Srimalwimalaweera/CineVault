@@ -131,7 +131,7 @@ export function VideoCard({ video, priority = false }: { video: Video, priority?
           fetch('https://assets-v2.lottiefiles.com/a/87291557-195f-435a-a943-119c62a3f773/604cT5Z6pX.json'), // heart
           fetch('https://assets-v2.lottiefiles.com/a/9f618a38-c6a6-4f40-ba76-a36f5619565f/15iF1bskK2.json'), // fire
           fetch('https://assets-v2.lottiefiles.com/a/32185b37-5619-4935-a744-1d89a9f4d764/FwsFzz99q1.json'), // hot-face
-          fetch('https://assets-v2.lottiefiles.com/a/136802f3-9366-419b-8c46-1d989f6671e6/vP3e29P5w4.json')  // star
+          fetch('https://lottie.host/62909923-a3d8-4a60-a29e-26f849b7d8d2/oYtHdwLdMC.json')  // star
         ]);
         const heart = await heartRes.json();
         const fire = await fireRes.json();
