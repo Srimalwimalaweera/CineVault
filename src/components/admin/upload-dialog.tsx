@@ -5,9 +5,10 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { UploadCloud, PlusSquare, Clipboard } from "lucide-react";
-import { useFirestore } from "@/firebase";
+import { UploadCloud, PlusSquare, Clipboard, FileImage, Loader2 } from "lucide-react";
+import { useFirestore, useStorage } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { addDocumentNonBlocking } from "@/firebase";
 
 import { Button } from "@/components/ui/button";
@@ -33,20 +34,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useNotification } from "@/hooks/use-notification";
+import { Progress } from "@/components/ui/progress";
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters long."),
   description: z.string().min(10, "Description must be at least 10 characters long."),
   videoUrl: z.string().url("Please enter a valid URL."),
-  thumbnailUrl: z.string().url("Please enter a valid thumbnail URL."),
+  thumbnailUrl: z.string().url("Please provide a thumbnail URL or upload an image."),
   accessLevel: z.enum(["free", "pro"]),
 });
 
 export function AdminUploadDialog() {
   const [open, setOpen] = useState(false);
-  const { toast } = useToast();
   const firestore = useFirestore();
+  const storage = useStorage();
   const { showNotification } = useNotification();
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -67,6 +70,31 @@ export function AdminUploadDialog() {
       console.error("Failed to paste", error);
     }
   }
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !storage) return;
+
+    const storageRef = ref(storage, `thumbnails/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      },
+      (error) => {
+        console.error("Upload failed:", error);
+        setUploadProgress(null);
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          form.setValue('thumbnailUrl', downloadURL, { shouldValidate: true });
+          setUploadProgress(null);
+        });
+      }
+    );
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) return;
@@ -169,7 +197,7 @@ export function AdminUploadDialog() {
                   <FormLabel>Thumbnail URL</FormLabel>
                   <div className="relative">
                     <FormControl>
-                      <Input placeholder="https://your-drive-link/image.jpg" {...field} className="pr-10"/>
+                      <Input placeholder="Paste URL or upload an image" {...field} className="pr-10"/>
                     </FormControl>
                     <Button type="button" size="icon" variant="ghost" className="absolute top-1/2 right-1 -translate-y-1/2 h-8 w-8" onClick={() => handlePaste('thumbnailUrl')} aria-label="Paste from clipboard">
                         <Clipboard className="h-4 w-4" />
@@ -179,6 +207,33 @@ export function AdminUploadDialog() {
                 </FormItem>
               )}
             />
+
+            <FormItem>
+              <FormLabel>Or Upload Thumbnail</FormLabel>
+              <div className="relative">
+                <FormControl>
+                  <Input 
+                    id="thumbnail-upload" 
+                    type="file" 
+                    className="pr-10" 
+                    accept="image/png, image/jpeg, image/gif"
+                    onChange={handleFileChange}
+                    disabled={uploadProgress !== null}
+                  />
+                </FormControl>
+                <div className="absolute top-1/2 right-1 -translate-y-1/2 h-8 w-8 flex items-center justify-center">
+                  {uploadProgress !== null ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <FileImage className="h-5 w-5 text-muted-foreground" />
+                  )}
+                </div>
+              </div>
+              {uploadProgress !== null && (
+                <Progress value={uploadProgress} className="w-full mt-2 h-2" />
+              )}
+            </FormItem>
+
             <FormField
               control={form.control}
               name="accessLevel"
@@ -210,7 +265,7 @@ export function AdminUploadDialog() {
               )}
             />
             <DialogFooter>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+              <Button type="submit" disabled={form.formState.isSubmitting || uploadProgress !== null}>
                 {form.formState.isSubmitting ? 'Uploading...' : 'Upload Video'}
               </Button>
             </DialogFooter>

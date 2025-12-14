@@ -407,7 +407,22 @@
       }
     ],
     "reasoning": "The Firestore data structure is designed to support the XVault platform, focusing on scalability, security, and ease of management. The structure leverages path-based ownership for user-specific data (favorites, playlists) and a flat collection for videos. This design minimizes the need for complex security rules and `get()` calls, ensuring authorization independence. \n\n*   **Videos:** Videos are stored in a flat `/videos` collection. This simplifies listing and querying videos. No denormalization is needed here as all videos have the same access control requirements (readable by all, writable only by admins - enforced via rules not structure).\n*   **Users:** A `/users` collection is introduced to store public profile information for each user. This allows for features like displaying user names or roles. Security rules ensure that users can only write to their own profile and cannot elevate their privileges.\n*   **Favorites:** Each user has a dedicated `/users/{userId}/favorites/{videoId}` subcollection. Using the `videoId` as the document ID provides an idempotent way to manage favorites, preventing duplicates.\n*   **Playlists:** Similar to favorites, playlists are stored in `/users/{userId}/playlists/{playlistId}`. This enforces path-based ownership and allows users to manage their playlists independently.\n*   **Reactions**: A user's reaction is stored in `/videos/{videoId}/reactions/{userId}`. Using the `userId` as the document ID ensures that each user can only have one reaction per video, simplifying the logic for creating or updating a reaction (upsert).\n*   **Ratings**: A user's rating is stored in `/videos/{videoId}/ratings/{userId}`. Using the `userId` as the document ID ensures that each user can only have one rating per video. Security rules will enforce that the rating value is between 1 and 5.\n*   **Settings**: A singleton document at `/settings/serviceProviders` stores public, application-wide configurations. This is ideal for data that needs to be read by all clients but only modified by administrators, such as payment provider details.\n*   **Payments**: A `/payments` collection stores individual payment transactions. Users can create documents here, but security rules prevent them from reading or updating other users' payments, ensuring privacy. Admins have full access for verification and management."
+  },
+  "storage": {
+    "buckets": [
+      {
+        "name": "gs://xvault-716f7.appspot.com",
+        "rules": [
+          {
+            "path": "/thumbnails/{fileName}",
+            "allow": {
+              "read": "if true;",
+              "write": "if request.auth != null && request.resource.size < 5 * 1024 * 1024 && request.resource.contentType.matches('image/.*');"
+            },
+            "description": "Allows authenticated users to upload image files smaller than 5MB to the 'thumbnails' folder. All users can read these files."
+          }
+        ]
+      }
+    ]
   }
 }
-
-    
